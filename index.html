@@ -1,0 +1,2221 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#3a6347">
+<meta name="description" content="Registro de aplicaciones fitosanitarias agr&iacute;colas. Gestiona cuarteles, productos SAG, dosis y responsables desde tu smartphone.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Registros Fitosanitarios</title>
+<style>
+/* ============ FUENTES LOCALES ============ */
+@font-face {
+  font-family: 'Outfit';
+  src: url('fonts/Outfit-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Outfit';
+  src: url('fonts/Outfit-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('fonts/JetBrainsMono-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('fonts/JetBrainsMono-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ============ TOKENS DE DISEÃ‘O ============ */
+:root {
+  /* Paleta â€” Botanical Garden */
+  --fern: #4a7c59;
+  --fern-dark: #3a6347;
+  --fern-light: #6b9a7b;
+  --fern-pale: #dce8df;
+  --fern-wash: #f0f5f1;
+  --marigold: #f9a620;
+  --marigold-dark: #b87a0d;
+  --marigold-pale: #fff4dd;
+  --terracotta: #b7472a;
+  --terracotta-light: #fbe9e5;
+  --cream: #f5f3ed;
+  --white: #ffffff;
+  --text: #2b2b29;
+  --text-secondary: #57574f;
+  --text-muted: #86867c;
+  --border: #e0dcd5;
+  --border-light: #eeeae4;
+
+  /* Sombras tintadas al hue fern (no grises neutras) */
+  --shadow-sm: 0 1px 3px rgba(58,99,71,0.10);
+  --shadow: 0 2px 10px rgba(58,99,71,0.10);
+  --shadow-lg: 0 8px 28px rgba(58,99,71,0.16);
+
+  /* Escala de radios: una regla documentada */
+  --r-xs: 4px;    /* elementos internos pequeÃ±os */
+  --r-sm: 8px;    /* inputs y botones */
+  --r-md: 12px;   /* cards */
+  --r-lg: 16px;   /* contenedores hero / weather */
+  --r-pill: 999px;
+
+  /* Escala z-index documentada */
+  --z-tabnav: 40;
+  --z-header: 50;
+  --z-drawer-overlay: 60;
+  --z-drawer: 61;
+  --z-modal: 70;
+  --z-toast: 80;
+
+  /* TipografÃ­a */
+  --font-ui: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+}
+
+html { font-size: 16px; }
+
+body {
+  font-family: var(--font-ui);
+  font-weight: 400;
+  background: var(--cream);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0.23 0 0 0 0 0.29 0 0 0 0 0.24 0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+  color: var(--text);
+  min-height: 100vh;
+  min-height: 100dvh;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* NÃºmeros y datos tabulares en mono */
+.record-badge,
+.mini-table td:nth-child(5),
+.mini-table td:nth-child(6),
+.mini-table td:nth-child(7) {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Transición base suave (easing spring-like) */
+:root { --ease: cubic-bezier(0.16, 1, 0.3, 1); }
+
+/* Focus visible accesible */
+:focus-visible {
+  outline: 2px solid var(--fern);
+  outline-offset: 2px;
+  border-radius: var(--r-xs);
+}
+
+/* Utilidad de ocultamiento (reemplaza inline styles) */
+.is-hidden { display: none !important; }
+
+/* Skip link accesible */
+.skip-link {
+  position: absolute;
+  left: -999px;
+  top: 0;
+  background: var(--fern-dark);
+  color: var(--white);
+  padding: 10px 16px;
+  z-index: var(--z-toast);
+  border-radius: 0 0 var(--r-sm) 0;
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+.skip-link:focus { left: 0; }
+
+/* Skeleton loader */
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--border-light) 25%, #faf8f3 50%, var(--border-light) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: var(--r-sm);
+  color: transparent;
+  min-height: 1em;
+}
+.skeleton-line { height: 14px; margin: 6px 0; }
+
+/* ---------- HEADER ---------- */
+.app-header {
+  background: var(--fern-dark);
+  background-image: linear-gradient(135deg, var(--fern-dark) 0%, var(--fern) 60%, var(--fern-light) 100%);
+  color: var(--white);
+  padding: 14px 16px 12px;
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: var(--z-header);
+  box-shadow: 0 2px 16px rgba(38,66,48,0.28);
+}
+.app-header h1 {
+  font-weight: 700;
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.15);
+}
+.app-header .subtitle {
+  font-size: 0.68rem;
+  opacity: 0.85;
+  margin-top: 2px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* ---------- TABS ---------- */
+.tab-nav {
+  display: flex;
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 70px;
+  z-index: var(--z-tabnav);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  padding: 5px 8px;
+  gap: 4px;
+}
+.tab-btn {
+  flex: 1;
+  padding: 10px 4px;
+  border: none;
+  background: none;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: var(--r-md);
+  transition: all 0.25s var(--ease);
+  white-space: nowrap;
+}
+.tab-btn.active {
+  color: var(--marigold-dark);
+  background: var(--marigold-pale);
+}
+.tab-btn .tab-icon { font-size: 1rem; display: block; margin-bottom: 2px; }
+
+/* ---------- LAYOUT ---------- */
+.main-content { padding: 12px; max-width: 720px; margin: 0 auto; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ---------- CARDS ---------- */
+.card {
+  background: var(--white);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-light);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.card-title {
+  font-family: var(--font-ui); font-weight: 700; letter-spacing: -0.02em;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--fern-dark);
+  margin-bottom: 14px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ---------- FORMS ---------- */
+.form-row { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+.form-group { flex: 1; min-width: 130px; }
+.form-group label {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  font-size: 0.9rem;
+  font-family: inherit;
+  background: var(--white);
+  color: var(--text);
+  transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
+  -webkit-appearance: none;
+  appearance: none;
+}
+.form-group select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235c5c5c' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 30px;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--fern);
+  box-shadow: 0 0 0 3px rgba(74,124,89,0.12);
+}
+.form-group textarea { resize: vertical; min-height: 70px; }
+
+/* ---------- TABLE ---------- */
+.table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 8px -16px 12px;
+  padding: 0 16px;
+}
+.table-wrapper table {
+  width: 100%;
+  min-width: 1000px;
+  border-collapse: collapse;
+  font-size: 0.75rem;
+}
+.table-wrapper th {
+  background: var(--fern-dark);
+  color: var(--white);
+  padding: 9px 6px;
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: left;
+}
+.table-wrapper td { padding: 5px 4px; border-bottom: 1px solid var(--border-light); }
+.table-wrapper td input {
+  width: 100%;
+  padding: 7px 5px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-xs);
+  font-size: 0.78rem;
+  font-family: inherit;
+  background: var(--white);
+  color: var(--text);
+  min-width: 72px;
+}
+.table-wrapper td input:focus {
+  outline: none;
+  border-color: var(--fern);
+  box-shadow: 0 0 0 2px rgba(74,124,89,0.1);
+}
+.table-wrapper td select {
+  width: 100%;
+  padding: 7px 5px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-xs);
+  font-size: 0.78rem;
+  font-family: inherit;
+  background: var(--white);
+  color: var(--text);
+  min-width: 96px;
+}
+.table-wrapper td select:focus {
+  outline: none;
+  border-color: var(--fern);
+  box-shadow: 0 0 0 2px rgba(74,124,89,0.1);
+}
+.table-wrapper td input[readonly] {
+  background: var(--fern-wash);
+  border-style: dashed;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+.btn-del-row {
+  background: none;
+  border: none;
+  color: var(--terracotta);
+  font-size: 1.15rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 50%;
+  font-weight: 700;
+  line-height: 1;
+}
+.btn-del-row:hover { background: var(--terracotta-light); }
+.btn-del-row:disabled { color: var(--text-muted); cursor: default; }
+
+/* ---------- BUTTONS ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border: none;
+  border-radius: var(--r-sm);
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s var(--ease);
+  white-space: nowrap;
+}
+.btn:active { transform: scale(0.97); }
+.btn-primary { background: var(--fern); color: var(--white); width: 100%; padding: 14px; font-size: 0.95rem; letter-spacing: 0.3px; }
+.btn-primary:hover { background: var(--fern-dark); }
+.btn-outline { background: var(--white); color: var(--fern); border: 2px solid var(--fern); }
+.btn-outline:hover { background: var(--fern-wash); }
+.btn-sm { padding: 6px 12px; font-size: 0.75rem; }
+.btn-danger { background: var(--terracotta); color: var(--white); }
+.btn-danger:hover { background: #9e3a21; }
+.btn-add { background: var(--fern-wash); color: var(--fern-dark); border: 1.5px dashed var(--fern-pale); width: 100%; margin-top: 4px; }
+.btn-add:hover { background: var(--fern-pale); }
+.btn-ghost { background: none; color: var(--text-muted); padding: 4px 8px; font-size: 0.72rem; }
+.btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn-group .btn { flex: 1; min-width: 100px; }
+
+/* ---------- HISTORY CARDS ---------- */
+.record-card {
+  background: var(--white);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+  margin-bottom: 10px;
+  overflow: hidden;
+  transition: box-shadow 0.25s var(--ease), transform 0.25s var(--ease), border-color 0.25s var(--ease);
+}
+.record-card:hover {
+  box-shadow: var(--shadow-lg);
+  border-color: var(--fern-pale);
+  transform: translateY(-2px);
+}
+.record-card:active { transform: translateY(0); }
+.record-header {
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  gap: 8px;
+  border-left: 4px solid var(--fern);
+}
+.record-info { flex: 1; min-width: 0; }
+.record-date { font-weight: 700; font-size: 0.9rem; color: var(--text); }
+.record-meta { font-size: 0.72rem; color: var(--text-secondary); margin-top: 2px; }
+.record-badge {
+  font-size: 0.64rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: var(--r-md);
+  white-space: nowrap;
+}
+.badge-green { background: var(--fern-pale); color: var(--fern-dark); }
+.record-body { display: none; padding: 0 14px 14px; border-top: 1px solid var(--border-light); }
+.record-body.open { display: block; }
+
+.mini-table { width: 100%; border-collapse: collapse; font-size: 0.72rem; margin: 8px 0; }
+.mini-table th { text-align: left; padding: 5px 4px; color: var(--text-secondary); font-size: 0.62rem; text-transform: uppercase; border-bottom: 1px solid var(--border-light); }
+.mini-table td { padding: 5px 4px; border-bottom: 1px solid var(--border-light); word-break: break-word; }
+.mini-table .comment-row { font-size: 0.74rem; color: var(--text-secondary); font-style: italic; padding-top: 8px; }
+
+.record-actions { display: flex; gap: 8px; margin-top: 12px; }
+.record-actions .btn { flex: 1; }
+
+/* ---------- FILTERS ---------- */
+.filter-bar { margin-bottom: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+.filter-bar select,
+.filter-bar input {
+  flex: 1;
+  min-width: 110px;
+  padding: 9px 10px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  font-size: 0.8rem;
+  font-family: inherit;
+  background: var(--white);
+  color: var(--text);
+}
+.filter-bar select:focus,
+.filter-bar input:focus { outline: none; border-color: var(--fern); }
+.filter-actions { display: flex; gap: 8px; margin-bottom: 12px; }
+
+/* ---------- RESPONSABLES ---------- */
+.list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-light);
+}
+.list-item:last-child { border-bottom: none; }
+.list-item .name { font-size: 0.9rem; font-weight: 500; color: var(--text); }
+.list-item .btn-del {
+  background: none; border: none; color: var(--terracotta); font-size: 0.82rem;
+  cursor: pointer; padding: 6px 10px; border-radius: var(--r-sm);
+}
+.list-item .btn-del:hover { background: var(--terracotta-light); }
+.add-user-row { display: flex; gap: 8px; margin-top: 12px; }
+.add-user-row input { flex: 1; }
+.add-user-row .btn { flex-shrink: 0; }
+
+/* ---------- STATES ---------- */
+.empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
+.empty-state .empty-icon { font-size: 2.5rem; margin-bottom: 8px; }
+.empty-state p { font-size: 0.85rem; }
+
+.alert {
+  padding: 12px 14px;
+  border-radius: var(--r-sm);
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-bottom: 12px;
+  display: none;
+}
+.alert-error { background: var(--terracotta-light); color: var(--terracotta); border: 1px solid #f5c6b8; }
+.alert-success { background: var(--fern-wash); color: var(--fern-dark); border: 1px solid var(--fern-pale); }
+.alert.visible { display: block; }
+
+/* ---------- TOAST / MODAL ---------- */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--fern-dark);
+  color: var(--white);
+  padding: 12px 24px;
+  border-radius: var(--r-pill);
+  font-size: 0.85rem;
+  font-weight: 500;
+  z-index: var(--z-toast);
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: var(--shadow-lg);
+}
+.toast.show { opacity: 1; }
+
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: var(--z-modal);
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+  background: var(--white);
+  border-radius: var(--r-md);
+  padding: 24px 20px;
+  max-width: 340px;
+  width: 100%;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+}
+.modal-box h3 { margin-bottom: 8px; color: var(--text); font-size: 1rem; font-family: var(--font-ui); font-weight: 700; letter-spacing: -0.02em; }
+.modal-box p { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px; }
+.modal-box .btn-group { justify-content: center; }
+
+/* ---------- SUMMARY ---------- */
+.summary-row { display: flex; gap: 8px; margin-bottom: 12px; }
+.summary-card {
+  flex: 1;
+  background: var(--white);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-light);
+  padding: 12px;
+  text-align: center;
+}
+.summary-card .num { font-size: 1.6rem; color: var(--fern); font-family: var(--font-mono); font-weight: 700; }
+.summary-card .label { font-size: 0.6rem; color: var(--text-muted); text-transform: uppercase; margin-top: 2px; letter-spacing: 0.5px; }
+
+/* ---------- EDIT BAR ---------- */
+.cancel-edit-bar {
+  display: none;
+  background: var(--marigold-pale);
+  border: 1px solid #ffe4a0;
+  padding: 10px 14px;
+  border-radius: var(--r-sm);
+  margin-bottom: 12px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--marigold-dark);
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.cancel-edit-bar.visible { display: flex; }
+
+/* ---------- AUTOFILL HINT ---------- */
+input[data-autofilled="true"] { background: var(--fern-wash) !important; border-color: var(--fern-pale) !important; }
+
+/* ---------- MENU HAMBURGUESA ---------- */
+.menu-toggle {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.25);
+  color: var(--white);
+  font-size: 1.15rem;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-md);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: background 0.2s;
+}
+.menu-toggle:active { background: rgba(255,255,255,0.3); }
+
+/* ---------- DRAWER ---------- */
+.drawer-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: var(--z-drawer-overlay);
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+.drawer-overlay.open { display: block; opacity: 1; }
+.drawer {
+  position: fixed;
+  top: 0;
+  left: -290px;
+  width: 280px;
+  height: 100%;
+  height: 100dvh;
+  background: var(--white);
+  z-index: var(--z-drawer);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  transition: left 0.28s ease;
+  box-shadow: 4px 0 24px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+}
+.drawer.open { left: 0; }
+.drawer-header {
+  background: linear-gradient(135deg, var(--fern-dark) 0%, var(--fern) 100%);
+  color: var(--white);
+  padding: 20px 16px;
+  flex-shrink: 0;
+}
+.drawer-header .d-title {
+  font-family: var(--font-ui); font-weight: 700; letter-spacing: -0.02em;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+.drawer-header .d-sub {
+  font-size: 0.68rem;
+  opacity: 0.85;
+  margin-top: 2px;
+  font-style: italic;
+}
+.drawer-menu { flex: 1; padding: 6px 0; }
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 16px;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-light);
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.menu-item:active { background: var(--fern-wash); }
+.menu-item.active { background: var(--marigold-pale); color: var(--marigold-dark); border-left: 3px solid var(--marigold); }
+.menu-item .m-icon { font-size: 1.1rem; width: 24px; text-align: center; flex-shrink: 0; }
+.menu-item .m-caret { margin-left: auto; font-size: 0.7rem; color: var(--text-muted); transition: transform 0.2s; }
+.menu-item.expanded .m-caret { transform: rotate(180deg); }
+.submenu {
+  display: none;
+  background: var(--cream);
+  border-bottom: 1px solid var(--border-light);
+}
+.submenu.open { display: block; }
+.submenu-item {
+  display: block;
+  width: 100%;
+  padding: 11px 16px 11px 50px;
+  border: none;
+  background: none;
+  text-align: left;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+.submenu-item:active { background: var(--fern-pale); }
+.submenu-item.active { color: var(--marigold-dark); font-weight: 700; }
+.drawer-footer {
+  padding: 12px 16px;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border-light);
+  flex-shrink: 0;
+  text-align: center;
+}
+
+/* ---------- PAGES ---------- */
+.page { display: none; }
+.page.active { display: block; }
+
+/* ---------- WELCOME ---------- */
+.welcome-hero {
+  position: relative;
+  min-height: calc(100dvh - 70px);
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+.welcome-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.welcome-photo {
+  z-index: 0;
+}
+.welcome-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(180deg, rgba(43,43,41,0.10) 0%, rgba(43,43,41,0) 30%, rgba(43,43,41,0.22) 100%);
+  pointer-events: none;
+}
+.welcome-content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 16px;
+}
+.welcome-card {
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid rgba(255,255,255,0.6);
+  padding: 20px 18px;
+  margin-bottom: 12px;
+}
+.welcome-greeting {
+  font-family: var(--font-ui); font-weight: 700; letter-spacing: -0.02em;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--fern-dark);
+  line-height: 1.2;
+}
+.welcome-date {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  text-transform: capitalize;
+}
+.welcome-location {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 10px;
+}
+.weather-card {
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid rgba(255,255,255,0.6);
+  padding: 16px 18px;
+}
+.weather-title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+.weather-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.weather-icon { font-size: 2.8rem; line-height: 1; }
+.weather-temp {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+}
+.weather-desc { font-size: 0.85rem; color: var(--text-secondary); margin-top: 2px; }
+.weather-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-light);
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+}
+.weather-details span { display: inline-flex; align-items: center; gap: 4px; }
+.weather-loading, .weather-error {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  padding: 8px 0;
+}
+.btn-gps {
+  background: none;
+  border: none;
+  color: var(--fern);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  font-family: inherit;
+}
+
+/* ---------- PLACEHOLDER ---------- */
+.placeholder-wrap { padding: 16px; max-width: 720px; margin: 0 auto; }
+.placeholder-card {
+  background: var(--white);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-light);
+  padding: 48px 24px;
+  text-align: center;
+  margin-top: 20px;
+}
+.placeholder-icon { font-size: 3rem; margin-bottom: 12px; }
+.placeholder-card h2 {
+  font-family: var(--font-ui); font-weight: 700; letter-spacing: -0.02em;
+  font-size: 1.2rem;
+  color: var(--fern-dark);
+  margin-bottom: 6px;
+}
+.placeholder-card p { font-size: 0.85rem; color: var(--text-muted); }
+.placeholder-breadcrumb {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-light);
+}
+
+/* ---------- MEDIA ---------- */
+@media (min-width: 500px) {
+  .tab-btn { font-size: 0.85rem; }
+  .form-group label { font-size: 0.75rem; }
+}
+@media (max-width: 360px) {
+  .tab-btn { font-size: 0.65rem; padding: 8px 2px; }
+  .app-header h1 { font-size: 1.05rem; }
+  .welcome-greeting { font-size: 1.15rem; }
+  .weather-temp { font-size: 2rem; }
+}
+</style>
+</head>
+<body>
+
+<a href="#page-inicio" class="skip-link">Ir al contenido</a>
+
+<header class="app-header">
+  <button class="menu-toggle" id="menuToggle" aria-label="Abrir men&uacute;">&#x2630;</button>
+  <h1 id="headerTitle">Gesti&oacute;n Agr&iacute;cola</h1>
+  <div class="subtitle" id="headerSubtitle">Campo &middot; Temporada 2026</div>
+</header>
+
+<!-- DRAWER LATERAL -->
+<div class="drawer-overlay" id="drawerOverlay"></div>
+<aside class="drawer" id="drawer">
+  <div class="drawer-header">
+    <div class="d-title">M&oacute;dulos</div>
+    <div class="d-sub">Gesti&oacute;n Agr&iacute;cola</div>
+  </div>
+  <nav class="drawer-menu" id="drawerMenu"></nav>
+  <div class="drawer-footer">Registros Fitosanitarios v2.0</div>
+</aside>
+
+<!-- PAGE: INICIO / BIENVENIDA -->
+<div class="page active" id="page-inicio">
+  <div class="welcome-hero">
+    <svg class="welcome-bg" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <linearGradient id="wsky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#b9c8d4"/>
+          <stop offset="45%" stop-color="#dcdcd2"/>
+          <stop offset="75%" stop-color="#efe9db"/>
+          <stop offset="100%" stop-color="#f5f0e4"/>
+        </linearGradient>
+        <linearGradient id="wground" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#e6e2d8"/>
+          <stop offset="100%" stop-color="#d0cabd"/>
+        </linearGradient>
+        <g id="wtree">
+          <ellipse cx="2" cy="2" rx="26" ry="5" fill="#b8b0a0" opacity="0.35"/>
+          <path d="M0,0 C0,-12 -1,-28 0,-48" stroke="#453b31" stroke-width="6" fill="none"/>
+          <path d="M0,-30 L-17,-54 M0,-38 L15,-60 M0,-47 L-10,-70 M0,-47 L9,-68 M-9,-48 L-20,-61 M9,-50 L21,-63 M0,-20 L-13,-36 M0,-25 L14,-38 M0,-8 L-7,-18 M0,-10 L8,-20" stroke="#453b31" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+        </g>
+      </defs>
+      <rect width="800" height="600" fill="url(#wsky)"/>
+      <circle cx="625" cy="105" r="48" fill="#f6ecd4" opacity="0.75"/>
+      <circle cx="625" cy="105" r="34" fill="#faf3e0" opacity="0.8"/>
+      <path d="M0,205 L110,132 L200,182 L310,108 L420,176 L520,122 L640,182 L730,138 L800,162 L800,420 L0,420 Z" fill="#a8b4bc" opacity="0.5"/>
+      <path d="M0,252 L140,196 L280,242 L400,190 L560,246 L700,200 L800,232 L800,430 L0,430 Z" fill="#97a3ab" opacity="0.38"/>
+      <rect x="0" y="330" width="800" height="72" fill="#f0ece2" opacity="0.65"/>
+      <rect x="0" y="385" width="800" height="215" fill="url(#wground)"/>
+      <use href="#wtree" transform="translate(45,400) scale(0.42)"/>
+      <use href="#wtree" transform="translate(125,398) scale(0.44)"/>
+      <use href="#wtree" transform="translate(205,401) scale(0.42)"/>
+      <use href="#wtree" transform="translate(285,399) scale(0.43)"/>
+      <use href="#wtree" transform="translate(365,401) scale(0.42)"/>
+      <use href="#wtree" transform="translate(445,398) scale(0.44)"/>
+      <use href="#wtree" transform="translate(525,400) scale(0.42)"/>
+      <use href="#wtree" transform="translate(605,399) scale(0.43)"/>
+      <use href="#wtree" transform="translate(685,401) scale(0.42)"/>
+      <use href="#wtree" transform="translate(765,398) scale(0.44)"/>
+      <use href="#wtree" transform="translate(65,460) scale(0.72)"/>
+      <use href="#wtree" transform="translate(195,462) scale(0.74)"/>
+      <use href="#wtree" transform="translate(325,459) scale(0.72)"/>
+      <use href="#wtree" transform="translate(455,461) scale(0.73)"/>
+      <use href="#wtree" transform="translate(585,460) scale(0.72)"/>
+      <use href="#wtree" transform="translate(715,462) scale(0.74)"/>
+      <use href="#wtree" transform="translate(85,548) scale(1.12)"/>
+      <use href="#wtree" transform="translate(285,552) scale(1.16)"/>
+      <use href="#wtree" transform="translate(485,549) scale(1.13)"/>
+      <use href="#wtree" transform="translate(690,551) scale(1.15)"/>
+      <rect x="0" y="560" width="800" height="40" fill="#e6e2d8" opacity="0.5"/>
+    </svg>
+    <img class="welcome-bg welcome-photo" src="img/huerto-invierno.jpg" alt="Plantaci&oacute;n de nogales en invierno" onerror="this.remove()">
+    <div class="welcome-scrim"></div>
+
+    <div class="welcome-content">
+      <div class="welcome-card">
+        <div class="welcome-greeting" id="welcomeGreeting">Bienvenido</div>
+        <div class="welcome-date" id="welcomeDate"></div>
+        <div class="welcome-location">
+          <span>&#x1F4CD;</span>
+          <span id="welcomeLocation">Obteniendo ubicaci&oacute;n...</span>
+        </div>
+      </div>
+
+      <div class="weather-card">
+        <div class="weather-title">&#x2601;&#xFE0F; Clima de hoy</div>
+        <div id="weatherContent">
+          <div class="weather-loading">Consultando clima...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: FITOSANITARIOS -->
+<div class="page" id="page-fitosanitarios">
+
+<nav class="tab-nav">
+  <button class="tab-btn active" data-tab="registro">
+    <span class="tab-icon">&#x1F4DD;</span> Nuevo Registro
+  </button>
+  <button class="tab-btn" data-tab="historial">
+    <span class="tab-icon">&#x1F4CB;</span> Historial
+  </button>
+  <button class="tab-btn" data-tab="responsables">
+    <span class="tab-icon">&#x1F465;</span> Responsables
+  </button>
+</nav>
+
+<main class="main-content">
+
+  <!-- TAB: NUEVO REGISTRO -->
+  <section class="tab-panel active" id="tab-registro">
+    <div class="cancel-edit-bar" id="cancelEditBar">
+      <span>Editando registro existente</span>
+      <button class="btn btn-sm btn-ghost" onclick="cancelarEdicion()">Cancelar edici&oacute;n</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">&#x1F4C5; Datos del Registro</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="fecha">Fecha</label>
+          <input type="date" id="fecha">
+        </div>
+        <div class="form-group">
+          <label for="cuartel">Cuartel</label>
+          <select id="cuartel">
+            <option value="">-- Seleccionar --</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card is-hidden" id="productosCard">
+      <div class="card-title">&#x1F9EA; Productos Aplicados</div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Estado Fenol&oacute;gico</th>
+              <th>Objetivo / Plaga</th>
+              <th>Grupo</th>
+              <th>Producto Comercial</th>
+              <th>Ingrediente Activo</th>
+              <th>Dosis (cc) / 100 L</th>
+              <th>Mojamiento (Lts)</th>
+              <th>Total Producto Comercial (Lts o Kg)</th>
+              <th>Responsable</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="productosTableBody"></tbody>
+        </table>
+      </div>
+      <button class="btn btn-add" onclick="agregarFilaProducto()">+ Agregar Producto</button>
+    </div>
+
+    <datalist id="productosSAG"></datalist>
+    <datalist id="gruposList"></datalist>
+    <datalist id="responsablesDatalist"></datalist>
+
+    <div class="card is-hidden" id="comentariosCard">
+      <div class="form-group">
+        <label for="comentarios">&#x1F4AC; Comentarios</label>
+        <textarea id="comentarios" placeholder="Notas u observaciones del registro..."></textarea>
+      </div>
+    </div>
+
+    <div id="alertRegistro" class="alert"></div>
+
+    <button class="btn btn-primary is-hidden" id="btnGuardar" onclick="guardarRegistro()">
+      &#x1F4BE; Guardar Registro
+    </button>
+  </section>
+
+  <!-- TAB: HISTORIAL -->
+  <section class="tab-panel" id="tab-historial">
+    <div id="alertHistorial" class="alert"></div>
+
+    <div class="summary-row" id="summaryRow"></div>
+
+    <div class="filter-bar">
+      <input type="date" id="filtroFecha" onchange="renderHistorial()">
+      <select id="filtroCuartel" onchange="renderHistorial()">
+        <option value="">Todos los cuarteles</option>
+      </select>
+      <select id="filtroResponsable" onchange="renderHistorial()">
+        <option value="">Todos los responsables</option>
+      </select>
+    </div>
+
+    <div class="filter-actions">
+      <button class="btn btn-outline btn-sm" onclick="limpiarFiltros()">Limpiar filtros</button>
+      <button class="btn btn-outline btn-sm" onclick="exportarCSV()">&#x1F4E5; Exportar CSV</button>
+    </div>
+
+    <div id="historialContainer"></div>
+  </section>
+
+  <!-- TAB: RESPONSABLES -->
+  <section class="tab-panel" id="tab-responsables">
+    <div class="card">
+      <div class="card-title">&#x1F465; Lista de Responsables</div>
+      <div id="responsablesList"></div>
+      <div class="add-user-row">
+        <input type="text" id="nuevoResponsable" placeholder="Nombre del responsable...">
+        <button class="btn btn-primary btn-sm" onclick="agregarResponsable()">Agregar</button>
+      </div>
+    </div>
+    <div id="alertResponsables" class="alert"></div>
+  </section>
+
+</main>
+
+</div>
+<!-- FIN PAGE: FITOSANITARIOS -->
+
+<!-- PAGE: PLACEHOLDER GENÃ‰RICO -->
+<div class="page" id="page-placeholder">
+  <div class="placeholder-wrap">
+    <div class="placeholder-card">
+      <div class="placeholder-icon" id="phIcon">&#x1F6A7;</div>
+      <h2 id="phTitulo">M&oacute;dulo</h2>
+      <p>M&oacute;dulo en construcci&oacute;n.<br>Pr&oacute;ximamente disponible.</p>
+      <div class="placeholder-breadcrumb" id="phRuta"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal-overlay" id="modalConfirm">
+  <div class="modal-box">
+    <h3 id="modalTitle">Confirmar</h3>
+    <p id="modalMsg"></p>
+    <div class="btn-group">
+      <button class="btn btn-outline btn-sm" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn btn-danger btn-sm" id="modalBtnConfirm">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+'use strict';
+
+/* ==================== UTILIDADES ==================== */
+function escaparHtml(str) {
+  return String(str == null ? '' : str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escaparAttr(str) {
+  return String(str == null ? '' : str).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function fechaHoy() {
+  var d = new Date();
+  var yyyy = d.getFullYear();
+  var mm = String(d.getMonth() + 1).padStart(2, '0');
+  var dd = String(d.getDate()).padStart(2, '0');
+  return yyyy + '-' + mm + '-' + dd;
+}
+function generarId() {
+  return Date.now() + '-' + Math.floor(Math.random() * 100000);
+}
+function mostrarToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timeout);
+  t._timeout = setTimeout(function() { t.classList.remove('show'); }, 2200);
+}
+function mostrarAlerta(id, tipo, msg) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.className = 'alert alert-' + tipo + ' visible';
+  el.textContent = msg;
+  setTimeout(function() { el.classList.remove('visible'); }, 4000);
+}
+
+/* ==================== MODAL ==================== */
+var modalCb = null;
+function abrirModal(titulo, msg, cb) {
+  document.getElementById('modalTitle').textContent = titulo;
+  document.getElementById('modalMsg').textContent = msg;
+  document.getElementById('modalConfirm').classList.add('open');
+  modalCb = cb;
+}
+window.cerrarModal = function() {
+  document.getElementById('modalConfirm').classList.remove('open');
+  modalCb = null;
+};
+
+document.getElementById('modalBtnConfirm').addEventListener('click', function() {
+  var cb = modalCb;
+  cerrarModal();
+  if (cb) cb();
+});
+
+document.getElementById('modalConfirm').addEventListener('click', function(e) {
+  if (e.target === this) cerrarModal();
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && document.getElementById('modalConfirm').classList.contains('open')) {
+    cerrarModal();
+  }
+});
+
+/* ==================== DATOS ==================== */
+var STORAGE_KEY = 'registros_fitosanitarios';
+
+function cargarDatos() {
+  var raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) {
+    var inicial = {
+      responsables: ['Marcelo Espinoza', 'Felipe Espinoza', 'Alvaro Espinoza'],
+      registros: []
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(inicial));
+    return inicial;
+  }
+  try {
+    var d = JSON.parse(raw);
+    if (!Array.isArray(d.responsables)) d.responsables = [];
+    if (!Array.isArray(d.registros)) d.registros = [];
+    return d;
+  } catch(e) {
+    return { responsables: [], registros: [] };
+  }
+}
+
+function guardarDatos(data) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    return true;
+  } catch(e) {
+    mostrarToast('Error al guardar datos');
+    return false;
+  }
+}
+
+var editandoId = null;
+
+/* ==================== CATÃLOGO DE PRODUCTOS ==================== */
+var gruposProductos = ["Fungicida", "Insecticida", "Herbicida", "Acaricida", "Nematicida", "Biol\u00f3gico", "Coadyuvante", "Regulador de Crecimiento", "Fertilizante Foliar", "Fumigante", "Molusquicida", "Otro"];
+
+var estadosFenologicos = ["Receso Invernal", "Yema Hinchada", "Brotaci\u00f3n", "Floraci\u00f3n", "Cuaja", "Crecimiento de fruto", "Envero", "Precosecha", "Postcosecha", "Ca\u00edda de Hojas"];
+
+var plagasObjetivo = ["Cancer Bacterial", "Hongos de la madera", "Botrytis", "Botrytis/Oidio", "O\u00eddio", "Polillas", "Ara\u00f1itas", "Trips", "Burritos", "Escamas", "Pudrici\u00f3n \u00c1cida", "Chanchito Blanco"];
+
+var productosPorGrupo = {
+  "Fungicida": [
+    "Aliette (Fosetyl-Al)","Amistar (Azoxystrobin)","Amistar Top (Azoxystrobin + Difenoconazole)","Antracol (Propineb)",
+    "Bellis (Boscalid + Pyraclostrobin)","Benlate (Benomyl)","Botristop (Fenhexamid)","Bravo (Chlorothalonil)",
+    "Cabrio (Pyraclostrobin)","Cantus (Boscalid)","Captan","Carbendazim","Cercobin (Thiophanate-methyl)",
+    "Champion (Copper hydroxide)","Cidely (Difenoconazole + Cyflufenamid)","Collis (Boscalid + Kresoxim-methyl)",
+    "Comet (Pyraclostrobin)","Consensus (Fenhexamid + Tebuconazole)","Coraza (Captan + Carbendazim)","Cosavet (Sulphur)",
+    "Crops (Epoxiconazole + Pyraclostrobin)","Cuprofix (Copper sulfate)","Curalan (Cymoxanil + Famoxadone)",
+    "Curzate (Cymoxanil + Mancozeb)","Cuspide (Flusilazole + Carbendazim)","Cycosin (Cyproconazole)",
+    "Daconil (Chlorothalonil)","Difenoconazole","Dithane (Mancozeb)","Domark (Tetraconazole)",
+    "Duett (Epoxiconazole + Carbendazim)","Elite (Tebuconazole)","Evito (Tebuconazole)",
+    "Falcon (Tebuconazole + Triadimenol + Spiroxamine)","Fenhexamid","Ferbam","Flash (Fenamidone + Fosetyl-Al)",
+    "Flint (Trifloxystrobin)","Flirt (Pyraclostrobin)","Fluazinam","Folicur (Tebuconazole)","Folisan (Fenpropimorph)",
+    "Folpet","Forum (Dimethomorph)","Frowncide (Fluazinam)","Galben (Benalaxyl + Mancozeb)","Harpun (Pyraclostrobin)",
+    "Headline (Pyraclostrobin)","Horizon (Tebuconazole)","Impact (Flutriafol)","Indar (Fenbuconazole)",
+    "Insignia (Fluindapyr)","Iprodione","Jockey (Fluquinconazole + Prochloraz)","Kasumin (Kasugamycin)",
+    "Kocide (Copper hydroxide)","Kolor (Fluopicolide + Propamocarb)","Kumulus (Sulphur)",
+    "Laredo (Myclobutanil)","Legacy (Azoxystrobin + Chlorothalonil)","Luna (Fluopyram)","Mancozeb",
+    "Manzate (Mancozeb)","Maxim (Fludioxonil)","Melody (Iprovalicarb)","Meltatox (Dodemorph)",
+    "Mertect (Thiabendazole)","Metalaxil","Mirage (Fenamidone)","Mistral (Azoxystrobin)","Monocut (Flutolanil)",
+    "Mythos (Pyrimethanil)","Nativo (Tebuconazole + Trifloxystrobin)","Nordox (Copper oxide)",
+    "Opera (Pyraclostrobin + Epoxiconazole)","Ortiva (Azoxystrobin)","Penncozeb (Mancozeb)",
+    "Phyton (Copper sulfate)","Pictor (Boscalid + Dimoxystrobin)","Polyram (Metiram)","Previcur (Propamocarb)",
+    "Pristine (Boscalid + Pyraclostrobin)","Prosper (Spiroxamine)","Punch (Flusilazole)",
+    "Quadris (Azoxystrobin)","Quilt (Azoxystrobin + Propiconazole)","Quinato (Copper oxychloride)",
+    "Rannan (Cyazofamid)","Raxil (Tebuconazole)","Revus (Mandipropamid)","Ridomil Gold (Metalaxyl-M)",
+    "Rovral (Iprodione)","Ruby (Fluopyram + Trifloxystrobin)","Scala (Pyrimethanil)",
+    "Score (Difenoconazole)","Serenade (Bacillus subtilis)","Sico (Difenoconazole + Cyproconazole)",
+    "Signum (Boscalid + Pyraclostrobin)","Silvacur (Tebuconazole + Triadimenol)","Sisthane (Myclobutanil)",
+    "Sportak (Prochloraz)","Stroby (Kresoxim-methyl)","Sulfato de Cobre","Sulphur","Sumi-8 (Fenarimol)",
+    "Switch (Cyprodinil + Fludioxonil)","Syllit (Dodine)","Systhane (Myclobutanil)",
+    "Tattoo (Propamocarb + Mancozeb)","Teldor (Fenhexamid)","Tercel (Dithianon + Pyraclostrobin)",
+    "Thiram","Tilder (Fenarimol)","Tilt (Propiconazole)","Timsen (Thiram)","Tiovit (Sulphur)",
+    "Topas (Penconazole)","Topsin (Thiophanate-methyl)","Trichodex (Trichoderma harzianum)",
+    "Trivax (Triadimenol + Tebuconazole)","Unix (Cyprodinil)","Vangard (Cyprodinil)","Verzo (Fluopicolide + Propamocarb)",
+    "Vibrance (Sedaxane)","Vigil (Fluindapyr)","Vinicur (Proquinazid)","Violin (Pyraclostrobin + Fluxapyroxad)",
+    "Vivando (Metrafenone)","Zampro (Ametoctradin + Dimethomorph)","Zignal (Fluazinam)",
+    "Ziram","Zorial (Oxadiazon)","Azufre","Biosulphur","Ceres (Copper oxychloride)",
+    "Bayfidan (Triadimenol)","Bayleton (Triadimefon)","Bion (Acibenzolar-S-methyl)",
+    "Caldo Bordel\u00e9s","Oxicloruro de Cobre","Hidr\u00f3xido de Cobre","Sulfato de Cobre Pentahidratado"
+  ],
+  "Insecticida": [
+    "Abamectina","Acetamiprid","Actara (Thiamethoxam)","Admire (Imidacloprid)","Affirm (Emamectin benzoate)",
+    "Agrimec (Abamectin)","Apache (Clothianidin)","Applaud (Buprofezin)","Astro (Deltamethrin)",
+    "Avaunt (Indoxacarb)","Baythroid (Cyfluthrin)","Belt (Flubendiamide)","Benevia (Cyantraniliprole)",
+    "Calypso (Thiacloprid)","Cascade (Flufenoxuron)","Centric (Dinotefuran)","Chess (Pymetrozine)",
+    "Chinmix (Beta-cyfluthrin)","Clorpirifos","Cobalto (Imidacloprid)","Confidor (Imidacloprid)",
+    "Confirm (Tebufenozide)","Connect (Imidacloprid + Beta-cyfluthrin)","Coragen (Chlorantraniliprole)",
+    "Danadim (Dimethoate)","Decis (Deltamethrin)","Devon (Methamidophos)","Diablo (Diazinon)",
+    "Diazol (Diazinon)","Dimethoate","Dipel (Bacillus thuringiensis)","Emerald (Methoxyfenozide)",
+    "Empire (Chlorpyrifos)","Engeo (Thiamethoxam + Lambda-cyhalothrin)","Epingle (Pyriproxyfen)",
+    "Escolta (Thiamethoxam + Chlorantraniliprole)","Esteem (Pyriproxyfen)","Evidence (Imidacloprid)",
+    "Exalt (Spinetoram)","Exirel (Cyantraniliprole)","Fastac (Alpha-cypermethrin)","Fulmek (Abamectin)",
+    "Fury (Zeta-cypermethrin)","Imidan (Phosmet)","Intrepid (Methoxyfenozide)","Karate (Lambda-cyhalothrin)",
+    "Kraft (Abamectin)","Lannate (Methomyl)","Laser (Spinosad)","Lorsban (Chlorpyrifos)",
+    "Malathion","Match (Lufenuron)","Mesurol (Methiocarb)","Methomyl","Mimic (Tebufenozide)",
+    "Monitor (Methamidophos)","Mospilan (Acetamiprid)","Movento (Spirotetramat)",
+    "Muralla (Imidacloprid + Beta-cyfluthrin)","Orthene (Acephate)","Padan (Cartap)",
+    "Perfekthion (Dimethoate)","Pirimor (Pirimicarb)","Plenum (Pymetrozine)","Poncho (Clothianidin)",
+    "Proclaim (Emamectin benzoate)","Proteus (Thiacloprid + Deltamethrin)","Provado (Imidacloprid)",
+    "Provento (Imidacloprid)","Pyrinex (Chlorpyrifos)","Radiant (Spinetoram)","Regent (Fipronil)",
+    "Rimon (Novaluron)","Runner (Methoxyfenozide)","Selecron (Profenofos)","Spintor (Spinosad)",
+    "Steward (Indoxacarb)","Success (Spinosad)","Sunfire (Flubendiamide)","Suprathion (Methidathion)",
+    "Talstar (Bifenthrin)","Tracer (Spinosad)","Trigard (Cyromazine)","Vantacor (Chlorantraniliprole)",
+    "Voliam (Chlorantraniliprole + Lambda-cyhalothrin)","Voliam Flexi (Chlorantraniliprole + Thiamethoxam)",
+    "Xentari (Bacillus thuringiensis var. aizawai)","Blindage (Imidacloprid + Thiodicarb)",
+    "Citation (Cyromazine)","Cymbush (Cypermethrin)","K-Obiol (Deltamethrin)","Lambda-cihalotrina",
+    "Lepidopter (Triflumuron)","Foray (Bacillus thuringiensis)","Force (Tefluthrin)",
+    "Marshal (Carbosulfan)","Vertimec (Abamectin)","Pegasus (Diafenthiuron)"
+  ],
+  "Herbicida": [
+    "2,4-D","2,4-DB","Accent (Nicosulfuron)","Afalon (Linuron)","Agil (Propaquizafop)",
+    "Ally (Metsulfuron-methyl)","Arrat (Tritosulfuron + Dicamba)","Atrazina","Authority (Sulfentrazone)",
+    "Azimut (Azimsulfuron)","Azul (Fluazifop-p-butyl)","Bacara (Flurtamone + Diflufenican)",
+    "Barrage (2,4-D)","Basagran (Bentazon)","Basta (Glufosinate-ammonium)","Betanal (Phenmedipham)",
+    "Bismark (Bromacil + Diuron)","Bonanza (Tembotrione)","Brominal (Bromoxynil)","Buctril (Bromoxynil)",
+    "Butisan (Metazachlor)","Callisto (Mesotrione)","Campero (Penoxsulam + Cyhalofop-butyl)",
+    "Centurion (Clethodim)","Certero (Triflusulfuron-methyl)","Clap (Clopyralid)","Clopyralid",
+    "Crystal (Imazapyr + Imazapic)","Dual Gold (S-metolachlor)","Finale (Glufosinate-ammonium)",
+    "Flex (Fomesafen)","Fluidosato (Glyphosate)","Frontier (Dimethenamid)","Fusilade (Fluazifop-p-butyl)",
+    "Galant (Haloxyfop)","Gallant (Haloxyfop-R-methyl)","Garlon (Triclopyr)","Gesaprim (Atrazine)",
+    "Glifosato","Goal (Oxyfluorfen)","Gramoxone (Paraquat)","Hache (Haloxyfop)","Hawk (Tembotrione + Isoxadifen-ethyl)",
+    "Herbadox (Pendimethalin)","Herbipack (Glyphosate)","Hoelon (Diclofop-methyl)","Hortil (Glyphosate)",
+    "Hussar (Iodosulfuron)","Hyvar (Bromacil)","Igran (Terbutryn)","Iodosulfuron","Kerb (Propyzamide)",
+    "Lasso (Alachlor)","Lontrel (Clopyralid)","Matrero (Glufosinate-ammonium)","Matrix (Rimsulfuron)",
+    "MCPA","Merlin (Isoxaflutole)","Metribuzin","Mikado (Sulcotrione)","Nicosulfuron",
+    "Nufarm Glyphosate","Oryzalin","Pantera (Quizalofop-P-tefuryl)","Paraquat","Pendimethalin",
+    "Pilarich (Glyphosate)","Pledge (Flumioxazin)","Poast (Sethoxydim)","Polar (S-metolachlor + Atrazine)",
+    "Preeglone (Diquat)","Primagram (Atrazine + Metolachlor)","Principal (Nicosulfuron + Rimsulfuron)",
+    "Prowl (Pendimethalin)","Raft (Tembotrione)","Ramrod (Propachlor)","Rapido (Glufosinate-ammonium)",
+    "Reglone (Diquat)","Relampago (Glyphosate)","Rilof (Azimsulfuron)","Rival (Glufosinate-ammonium)",
+    "Rondo (Glufosinate-ammonium)","Ronstar (Oxadiazon)","Roundup (Glyphosate)","Safari (Triflusulfuron-methyl)",
+    "Scepter (Imazaquin)","Select (Clethodim)","Sencor (Metribuzin)","Starane (Fluroxypyr)",
+    "Stinger (Clopyralid)","Stomp (Pendimethalin)","Storm (Flumioxazin)","Tigre (Quizalofop-p-ethyl)",
+    "Titus (Rimsulfuron)","Topik (Clodinafop-propargyl)","Tordon (Picloram)","Totril (Ioxynil)",
+    "Touchdown (Glyphosate)","Treflan (Trifluralin)","Valor (Flumioxazin)","Vendaval (Flumioxazin)",
+    "Verdict (Haloxyfop-R-methyl)","Weedex (Simazine)","Zidua (Pyroxasulfone)","Simazina","Aramo (Tepraloxydim)"
+  ],
+  "Acaricida": [
+    "Abamectina","Agrimec (Abamectin)","Akari (Fenpyroximate)","Breaker (Bifenazate)","Envidor (Spirodiclofen)",
+    "Fulmek (Abamectin)","Kanemite (Acequinocyl)","Milbeknock (Milbemectin)","Nissorun (Hexythiazox)",
+    "Oberon (Spiromesifen)","Omite (Propargite)","Sanmite (Pyridaben)","Vertimec (Abamectin)",
+    "Zeal (Etoxazole)"
+  ],
+  "Nematicida": [
+    "Counter (Terbufos)","Konan (Fluopyram)","Marshal (Carbosulfan)","Mocap (Ethoprophos)","Nemacur (Fenamiphos)",
+    "Temik (Aldicarb)","Vidate (Oxamyl)","Velum (Fluopyram)"
+  ],
+  "Biol\u00f3gico": [
+    "Bacillus amyloliquefaciens","Bacillus subtilis","Bacillus thuringiensis","Beauveria bassiana",
+    "Dipel (Bacillus thuringiensis)","Foray (Bacillus thuringiensis)","Metarhizium anisopliae",
+    "Paecilomyces lilacinus","Preferal (Paecilomyces fumosoroseus)","Requiem (Chenopodium ambrosioides)",
+    "Serenade (Bacillus subtilis)","Trichoderma spp.","Trichodex (Trichoderma harzianum)",
+    "Verticillium lecanii","Xentari (Bacillus thuringiensis var. aizawai)","Azadiractina (Azadirachtin)",
+    "Extracto de Ajo","Extracto de C\u00edtricos","Aceite de Neem (Neem Oil)","Bicarbonato de Potasio"
+  ],
+  "Coadyuvante": [
+    "Aceite Mineral (Mineral Oil)","Aceite de Neem (Neem Oil)","Jab\u00f3n Pot\u00e1sico",
+    "Oil-Sea (Paraffinic oil)","Silicona Agr\u00edcola","Polisulfuro de Calcio"
+  ],
+  "Regulador de Crecimiento": [
+    "Alar (Daminozide)","Break (Cyclanilide + Ethephon)","Certero (Triflusulfuron-methyl)",
+    "Sempra (Prohexadione-calcium)","Equiseto (Equisetum arvense)"
+  ],
+  "Fertilizante Foliar": [
+    "Agrosoil","Calcio (Varios)","Azufre","Biosulphur","Bicarbonato de Potasio"
+  ],
+  "Fumigante": [
+    "Metam Sodio"
+  ],
+  "Molusquicida": []
+};
+
+var mapaProductoIngrediente = {};
+
+function construirMapaIngredientes() {
+  var keys = Object.keys(productosPorGrupo);
+  for (var k = 0; k < keys.length; k++) {
+    var prods = productosPorGrupo[keys[k]];
+    for (var i = 0; i < prods.length; i++) {
+      var prod = prods[i];
+      var match = prod.match(/^(.+?)\s*\((.+)\)\s*$/);
+      mapaProductoIngrediente[prod] = match ? match[2].trim() : prod;
+    }
+  }
+}
+
+function obtenerIngredienteActivo(producto) {
+  if (!producto) return '';
+  if (mapaProductoIngrediente[producto]) return mapaProductoIngrediente[producto];
+  var match = producto.match(/^(.+?)\s*\((.+)\)\s*$/);
+  return match ? match[2].trim() : '';
+}
+
+function filtrarProductosPorGrupo(grupo) {
+  var dl = document.getElementById('productosSAG');
+  if (!dl) return;
+  dl.innerHTML = '';
+  var productos = [];
+  if (grupo && productosPorGrupo[grupo] && productosPorGrupo[grupo].length > 0) {
+    productos = productosPorGrupo[grupo];
+  } else if (!grupo) {
+    var keys = Object.keys(productosPorGrupo);
+    for (var k = 0; k < keys.length; k++) {
+      productos = productos.concat(productosPorGrupo[keys[k]]);
+    }
+  } else {
+    var keys2 = Object.keys(productosPorGrupo);
+    for (var k2 = 0; k2 < keys2.length; k2++) {
+      productos = productos.concat(productosPorGrupo[keys2[k2]]);
+    }
+  }
+  var frag = document.createDocumentFragment();
+  for (var i = 0; i < productos.length; i++) {
+    var opt = document.createElement('option');
+    opt.value = productos[i];
+    frag.appendChild(opt);
+  }
+  dl.appendChild(frag);
+}
+
+function poblarDatalistGrupos() {
+  var dl = document.getElementById('gruposList');
+  if (!dl) return;
+  var html = '';
+  for (var i = 0; i < gruposProductos.length; i++) {
+    html += '<option value="' + escaparAttr(gruposProductos[i]) + '"></option>';
+  }
+  dl.innerHTML = html;
+}
+
+function poblarDatalistResponsables() {
+  var dl = document.getElementById('responsablesDatalist');
+  if (!dl) return;
+  var responsables = cargarDatos().responsables;
+  var html = '';
+  for (var i = 0; i < responsables.length; i++) {
+    html += '<option value="' + escaparAttr(responsables[i]) + '"></option>';
+  }
+  dl.innerHTML = html;
+}
+
+/* ==================== TABS ==================== */
+document.querySelectorAll('.tab-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    if (btn.dataset.tab === 'historial') renderHistorial();
+  });
+});
+
+function cambiarTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+  document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelector('[data-tab="' + tab + '"]').classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+}
+
+/* ==================== CUARTEL ==================== */
+var selCuartel = document.getElementById('cuartel');
+for (var i = 1; i <= 12; i++) {
+  var opt = document.createElement('option');
+  opt.value = String(i);
+  opt.textContent = 'Cuartel ' + i;
+  selCuartel.appendChild(opt);
+}
+
+document.getElementById('fecha').value = fechaHoy();
+
+selCuartel.addEventListener('change', function() {
+  var visible = this.value !== '';
+  document.getElementById('productosCard').classList.toggle('is-hidden', !visible);
+  document.getElementById('comentariosCard').classList.toggle('is-hidden', !visible);
+  document.getElementById('btnGuardar').classList.toggle('is-hidden', !visible);
+  if (visible && document.getElementById('productosTableBody').children.length === 0) {
+    agregarFilaProducto();
+  }
+});
+
+/* ==================== FILTROS ==================== */
+var filtroCuartel = document.getElementById('filtroCuartel');
+for (var j = 1; j <= 12; j++) {
+  var o = document.createElement('option');
+  o.value = String(j);
+  o.textContent = 'Cuartel ' + j;
+  filtroCuartel.appendChild(o);
+}
+
+window.limpiarFiltros = function() {
+  document.getElementById('filtroFecha').value = '';
+  document.getElementById('filtroCuartel').value = '';
+  document.getElementById('filtroResponsable').value = '';
+  renderHistorial();
+};
+
+/* ==================== FILAS DE PRODUCTOS ==================== */
+function opcionesHtml(lista) {
+  var html = '<option value="">-- Seleccionar --</option>';
+  for (var i = 0; i < lista.length; i++) {
+    html += '<option value="' + escaparAttr(lista[i]) + '">' + escaparHtml(lista[i]) + '</option>';
+  }
+  return html;
+}
+
+function setSelectValue(sel, valor) {
+  if (!sel || !valor) return;
+  var existe = false;
+  for (var i = 0; i < sel.options.length; i++) {
+    if (sel.options[i].value === valor) { existe = true; break; }
+  }
+  if (!existe) {
+    var o = document.createElement('option');
+    o.value = valor;
+    o.textContent = valor;
+    sel.appendChild(o);
+  }
+  sel.value = valor;
+}
+
+function parseNum(v) {
+  if (!v) return NaN;
+  var n = parseFloat(String(v).replace(',', '.').replace(/[^0-9.\-]/g, ''));
+  return isNaN(n) ? NaN : n;
+}
+
+function recalcularTotal(tr) {
+  var dosis = parseNum(tr.querySelector('.f-dosis').value);
+  var moja = parseNum(tr.querySelector('.f-mojamiento').value);
+  if (isNaN(dosis) || isNaN(moja)) return;
+  tr.querySelector('.f-total').value = parseFloat((moja * dosis / 100 / 1000).toFixed(3));
+}
+
+window.agregarFilaProducto = function(datos) {
+  var tbody = document.getElementById('productosTableBody');
+  var tr = document.createElement('tr');
+  datos = datos || {};
+
+  tr.innerHTML =
+    '<td><select class="f-estado">' + opcionesHtml(estadosFenologicos) + '</select></td>' +
+    '<td><select class="f-plaga">' + opcionesHtml(plagasObjetivo) + '</select></td>' +
+    '<td><input type="text" class="f-grupo" placeholder="Grupo..." list="gruposList" autocomplete="off" value="' + escaparAttr(datos.grupo || '') + '"></td>' +
+    '<td><input type="text" class="f-producto" placeholder="Buscar producto..." list="productosSAG" autocomplete="off" value="' + escaparAttr(datos.producto || '') + '"></td>' +
+    '<td><input type="text" class="f-ingrediente" placeholder="Principio activo (auto)" value="' + escaparAttr(datos.ingredienteActivo || '') + '"' + (datos.ingredienteActivo ? ' data-autofilled="false"' : '') + '></td>' +
+    '<td><input type="text" class="f-dosis" placeholder="cc / 100L" value="' + escaparAttr(datos.dosis || '') + '"></td>' +
+    '<td><input type="text" class="f-mojamiento" placeholder="Lts" value="' + escaparAttr(datos.mojamiento || '') + '"></td>' +
+    '<td><input type="text" class="f-total" placeholder="Auto" readonly tabindex="-1" value="' + escaparAttr(datos.total || '') + '"></td>' +
+    '<td><input type="text" class="f-responsable" placeholder="Responsable..." list="responsablesDatalist" autocomplete="off" value="' + escaparAttr(datos.responsable || '') + '"></td>' +
+    '<td><button class="btn-del-row" title="Eliminar producto">&times;</button></td>';
+
+  // Eventos
+  tr.querySelector('.f-grupo').addEventListener('input', function() {
+    filtrarProductosPorGrupo(this.value);
+    var prodInput = tr.querySelector('.f-producto');
+    if (prodInput) prodInput.focus();
+  });
+
+  tr.querySelector('.f-producto').addEventListener('input', function() {
+    var ingrediente = obtenerIngredienteActivo(this.value.trim());
+    var ingInput = tr.querySelector('.f-ingrediente');
+    if (ingInput && ingrediente) {
+      if (!ingInput.value || ingInput.dataset.autofilled === 'true') {
+        ingInput.value = ingrediente;
+        ingInput.dataset.autofilled = 'true';
+      }
+    }
+  });
+
+  tr.querySelector('.f-ingrediente').addEventListener('input', function() {
+    this.dataset.autofilled = 'false';
+  });
+
+  tr.querySelector('.f-dosis').addEventListener('input', function() { recalcularTotal(tr); });
+  tr.querySelector('.f-mojamiento').addEventListener('input', function() { recalcularTotal(tr); });
+
+  tr.querySelector('.btn-del-row').addEventListener('click', function() {
+    if (tbody.children.length <= 1) {
+      mostrarToast('Debe haber al menos un producto');
+      return;
+    }
+    tr.remove();
+  });
+
+  setSelectValue(tr.querySelector('.f-estado'), datos.estadoFenologico);
+  setSelectValue(tr.querySelector('.f-plaga'), datos.plaga);
+  recalcularTotal(tr);
+
+  tbody.appendChild(tr);
+};
+
+/* ==================== GUARDAR ==================== */
+window.guardarRegistro = function() {
+  var fecha = document.getElementById('fecha').value;
+  var cuartel = document.getElementById('cuartel').value;
+  var comentarios = document.getElementById('comentarios').value.trim();
+  var filas = document.getElementById('productosTableBody').children;
+  var productos = [];
+
+  for (var i = 0; i < filas.length; i++) {
+    var tr = filas[i];
+    var p = {
+      estadoFenologico: tr.querySelector('.f-estado').value.trim(),
+      plaga: tr.querySelector('.f-plaga').value.trim(),
+      grupo: tr.querySelector('.f-grupo').value.trim(),
+      producto: tr.querySelector('.f-producto').value.trim(),
+      ingredienteActivo: tr.querySelector('.f-ingrediente').value.trim(),
+      dosis: tr.querySelector('.f-dosis').value.trim(),
+      mojamiento: tr.querySelector('.f-mojamiento').value.trim(),
+      total: tr.querySelector('.f-total').value.trim(),
+      responsable: tr.querySelector('.f-responsable').value.trim()
+    };
+    if (!p.producto && !p.ingredienteActivo && !p.plaga) continue;
+    productos.push(p);
+  }
+
+  if (!fecha) { mostrarAlerta('alertRegistro', 'error', 'Seleccione una fecha.'); return; }
+  if (!cuartel) { mostrarAlerta('alertRegistro', 'error', 'Seleccione un cuartel.'); return; }
+  if (productos.length === 0) { mostrarAlerta('alertRegistro', 'error', 'Agregue al menos un producto con datos.'); return; }
+
+  var data = cargarDatos();
+
+  if (editandoId !== null) {
+    for (var k = 0; k < data.registros.length; k++) {
+      if (String(data.registros[k].id) === String(editandoId)) {
+        data.registros[k].fecha = fecha;
+        data.registros[k].cuartel = cuartel;
+        data.registros[k].productos = productos;
+        data.registros[k].comentarios = comentarios;
+        break;
+      }
+    }
+    if (guardarDatos(data)) {
+      mostrarToast('Registro actualizado');
+      cancelarEdicion();
+      cambiarTab('historial');
+    }
+  } else {
+    data.registros.push({
+      id: generarId(),
+      fecha: fecha,
+      cuartel: cuartel,
+      productos: productos,
+      comentarios: comentarios
+    });
+    if (guardarDatos(data)) {
+      mostrarToast('Registro guardado');
+      limpiarFormulario();
+    }
+  }
+};
+
+window.cancelarEdicion = function() {
+  editandoId = null;
+  document.getElementById('cancelEditBar').classList.remove('visible');
+  document.getElementById('btnGuardar').textContent = '\uD83D\uDCBE Guardar Registro';
+  document.getElementById('alertRegistro').classList.remove('visible');
+  limpiarFormulario();
+};
+
+function limpiarFormulario() {
+  document.getElementById('fecha').value = fechaHoy();
+  document.getElementById('cuartel').value = '';
+  document.getElementById('comentarios').value = '';
+  document.getElementById('productosTableBody').innerHTML = '';
+  document.getElementById('productosCard').classList.add('is-hidden');
+  document.getElementById('comentariosCard').classList.add('is-hidden');
+  document.getElementById('btnGuardar').classList.add('is-hidden');
+  document.getElementById('alertRegistro').classList.remove('visible');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ==================== EDITAR / ELIMINAR / DUPLICAR ==================== */
+function buscarRegistro(id) {
+  var data = cargarDatos();
+  for (var i = 0; i < data.registros.length; i++) {
+    if (String(data.registros[i].id) === String(id)) return { reg: data.registros[i], data: data };
+  }
+  return null;
+}
+
+window.editarRegistro = function(id) {
+  var found = buscarRegistro(id);
+  if (!found) return;
+  var reg = found.reg;
+
+  editandoId = reg.id;
+  document.getElementById('fecha').value = reg.fecha;
+  document.getElementById('cuartel').value = reg.cuartel;
+  document.getElementById('comentarios').value = reg.comentarios || '';
+  document.getElementById('productosTableBody').innerHTML = '';
+
+  document.getElementById('productosCard').classList.remove('is-hidden');
+  document.getElementById('comentariosCard').classList.remove('is-hidden');
+  document.getElementById('btnGuardar').classList.remove('is-hidden');
+  document.getElementById('btnGuardar').textContent = '\u2705 Actualizar Registro';
+  document.getElementById('cancelEditBar').classList.add('visible');
+
+  for (var j = 0; j < reg.productos.length; j++) {
+    agregarFilaProducto(reg.productos[j]);
+  }
+  if (reg.productos.length === 0) agregarFilaProducto();
+
+  cambiarTab('registro');
+  document.getElementById('alertRegistro').classList.remove('visible');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+window.duplicarRegistro = function(id) {
+  var found = buscarRegistro(id);
+  if (!found) return;
+  var reg = JSON.parse(JSON.stringify(found.reg));
+  reg.id = null;
+
+  document.getElementById('fecha').value = fechaHoy();
+  document.getElementById('cuartel').value = reg.cuartel;
+  document.getElementById('comentarios').value = reg.comentarios || '';
+  document.getElementById('productosTableBody').innerHTML = '';
+
+  document.getElementById('productosCard').classList.remove('is-hidden');
+  document.getElementById('comentariosCard').classList.remove('is-hidden');
+  document.getElementById('btnGuardar').classList.remove('is-hidden');
+  document.getElementById('btnGuardar').textContent = '\uD83D\uDCBE Guardar Registro';
+  document.getElementById('cancelEditBar').classList.remove('visible');
+  editandoId = null;
+
+  for (var j = 0; j < reg.productos.length; j++) {
+    agregarFilaProducto(reg.productos[j]);
+  }
+  if (reg.productos.length === 0) agregarFilaProducto();
+
+  cambiarTab('registro');
+  mostrarToast('Registro duplicado â€” revise y guarde');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+window.eliminarRegistro = function(id) {
+  abrirModal('Eliminar Registro', '\u00BFEst\u00E1 seguro de eliminar este registro? Esta acci\u00F3n no se puede deshacer.', function() {
+    var data = cargarDatos();
+    data.registros = data.registros.filter(function(r) { return String(r.id) !== String(id); });
+    guardarDatos(data);
+    mostrarToast('Registro eliminado');
+    if (String(editandoId) === String(id)) cancelarEdicion();
+    renderHistorial();
+  });
+};
+
+/* ==================== HISTORIAL ==================== */
+function actualizarFiltroResponsables() {
+  var data = cargarDatos();
+  var sel = document.getElementById('filtroResponsable');
+  var actual = sel.value;
+  sel.innerHTML = '<option value="">Todos los responsables</option>';
+  var names = [];
+  for (var i = 0; i < data.registros.length; i++) {
+    var prods = data.registros[i].productos || [];
+    for (var j = 0; j < prods.length; j++) {
+      var r = prods[j].responsable;
+      if (r && names.indexOf(r) === -1) names.push(r);
+    }
+  }
+  names.sort();
+  for (var k = 0; k < names.length; k++) {
+    var o = document.createElement('option');
+    o.value = names[k];
+    o.textContent = names[k];
+    sel.appendChild(o);
+  }
+  if (names.indexOf(actual) !== -1) sel.value = actual;
+}
+
+window.renderHistorial = function() {
+  var data = cargarDatos();
+  var registros = data.registros.slice().sort(function(a, b) {
+    var fa = a.fecha || '', fb = b.fecha || '';
+    if (fa !== fb) return fa < fb ? 1 : -1;
+    return String(b.id) < String(a.id) ? -1 : 1;
+  });
+
+  var filtroF = document.getElementById('filtroFecha').value;
+  var filtroC = document.getElementById('filtroCuartel').value;
+  var filtroR = document.getElementById('filtroResponsable').value;
+
+  if (filtroF) registros = registros.filter(function(r) { return r.fecha === filtroF; });
+  if (filtroC) registros = registros.filter(function(r) { return String(r.cuartel) === filtroC; });
+  if (filtroR) registros = registros.filter(function(r) {
+    var prods = r.productos || [];
+    for (var i = 0; i < prods.length; i++) {
+      if (prods[i].responsable === filtroR) return true;
+    }
+    return false;
+  });
+
+  actualizarFiltroResponsables();
+
+  var totalProductos = 0;
+  var cuartelesUnicos = {};
+  for (var t = 0; t < registros.length; t++) {
+    totalProductos += (registros[t].productos || []).length;
+    cuartelesUnicos[registros[t].cuartel] = true;
+  }
+
+  document.getElementById('summaryRow').innerHTML =
+    '<div class="summary-card"><div class="num">' + registros.length + '</div><div class="label">Registros</div></div>' +
+    '<div class="summary-card"><div class="num">' + totalProductos + '</div><div class="label">Productos</div></div>' +
+    '<div class="summary-card"><div class="num">' + Object.keys(cuartelesUnicos).length + '</div><div class="label">Cuarteles</div></div>';
+
+  var container = document.getElementById('historialContainer');
+
+  if (registros.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">&#x1F4ED;</div><p>No hay registros guardados</p></div>';
+    return;
+  }
+
+  var html = '';
+  for (var i = 0; i < registros.length; i++) {
+    var reg = registros[i];
+    var fechaFormateada = String(reg.fecha || '').split('-').reverse().join('/');
+    var prods = reg.productos || [];
+    var nProd = prods.length;
+    var rid = escaparAttr(reg.id);
+
+    html += '<div class="record-card">';
+    html += '<div class="record-header" onclick="toggleRecordBody(this)">';
+    html += '<div class="record-info">';
+    html += '<div class="record-date">' + fechaFormateada + '</div>';
+    html += '<div class="record-meta">Cuartel ' + escaparHtml(reg.cuartel) + ' &middot; ' + nProd + ' producto' + (nProd !== 1 ? 's' : '') + '</div>';
+    html += '</div>';
+    html += '<span class="record-badge badge-green">' + nProd + '</span>';
+    html += '</div>';
+
+    html += '<div class="record-body">';
+    html += '<table class="mini-table"><thead><tr><th>Grupo</th><th>Prod.</th><th>Plaga</th><th>I. Activo</th><th>Dosis</th><th>Moj.</th><th>Total</th><th>Resp.</th></tr></thead><tbody>';
+    for (var j = 0; j < prods.length; j++) {
+      var p = prods[j];
+      html += '<tr>';
+      html += '<td>' + escaparHtml(p.grupo || '-') + '</td>';
+      html += '<td>' + escaparHtml(p.producto || '-') + '</td>';
+      html += '<td>' + escaparHtml(p.plaga || '-') + '</td>';
+      html += '<td>' + escaparHtml(p.ingredienteActivo || '-') + '</td>';
+      html += '<td>' + escaparHtml(p.dosis || '-') + '</td>';
+      html += '<td>' + escaparHtml(p.mojamiento || '-') + '</td>';
+      html += '<td>' + escaparHtml(p.total || '-') + '</td>';
+      html += '<td>' + escaparHtml(p.responsable || '-') + '</td>';
+      html += '</tr>';
+    }
+    html += '</tbody></table>';
+
+    if (reg.comentarios) {
+      html += '<div class="comment-row"><strong>Comentarios:</strong> ' + escaparHtml(reg.comentarios) + '</div>';
+    }
+
+    html += '<div class="record-actions">';
+    html += '<button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); editarRegistro(\'' + rid + '\')">&#x270F; Editar</button>';
+    html += '<button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); duplicarRegistro(\'' + rid + '\')">&#x2398; Duplicar</button>';
+    html += '<button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); eliminarRegistro(\'' + rid + '\')">&#x1F5D1; Eliminar</button>';
+    html += '</div>';
+
+    html += '</div></div>';
+  }
+
+  container.innerHTML = html;
+};
+
+window.toggleRecordBody = function(header) {
+  var body = header.nextElementSibling;
+  if (body) body.classList.toggle('open');
+};
+
+/* ==================== EXPORTAR CSV ==================== */
+window.exportarCSV = function() {
+  var data = cargarDatos();
+  if (!data.registros.length) {
+    mostrarToast('No hay registros para exportar');
+    return;
+  }
+  var lineas = [['Fecha','Cuartel','Estado Fenologico','Objetivo/Plaga','Grupo','Producto Comercial','Ingrediente Activo','Dosis (cc)/100L','Mojamiento (Lts)','Total Producto Comercial (Lts o Kg)','Responsable','Comentarios']];
+  var registros = data.registros.slice().sort(function(a, b) { return (a.fecha || '') < (b.fecha || '') ? -1 : 1; });
+  for (var i = 0; i < registros.length; i++) {
+    var reg = registros[i];
+    var prods = reg.productos || [];
+    if (prods.length === 0) {
+      lineas.push([reg.fecha, reg.cuartel, '', '', '', '', '', '', '', '', '', reg.comentarios || '']);
+    } else {
+      for (var j = 0; j < prods.length; j++) {
+        var p = prods[j];
+        lineas.push([reg.fecha, reg.cuartel, p.estadoFenologico || '', p.plaga || '', p.grupo || '', p.producto || '', p.ingredienteActivo || '', p.dosis || '', p.mojamiento || '', p.total || '', p.responsable || '', reg.comentarios || '']);
+      }
+    }
+  }
+  var csv = lineas.map(function(row) {
+    return row.map(function(c) {
+      var s = String(c == null ? '' : c);
+      if (s.indexOf(',') !== -1 || s.indexOf('"') !== -1 || s.indexOf('\n') !== -1 || s.indexOf(';') !== -1) {
+        s = '"' + s.replace(/"/g, '""') + '"';
+      }
+      return s;
+    }).join(';');
+  }).join('\r\n');
+
+  var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'registros_fitosanitarios_' + fechaHoy() + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  mostrarToast('CSV exportado');
+};
+
+/* ==================== RESPONSABLES ==================== */
+window.renderResponsables = function() {
+  var data = cargarDatos();
+  var list = document.getElementById('responsablesList');
+  if (!list) return;
+  if (data.responsables.length === 0) {
+    list.innerHTML = '<div style="padding:12px 0;color:var(--text-muted);font-size:0.85rem;">No hay responsables registrados.</div>';
+    return;
+  }
+  var html = '';
+  for (var i = 0; i < data.responsables.length; i++) {
+    html += '<div class="list-item">';
+    html += '<span class="name">' + escaparHtml(data.responsables[i]) + '</span>';
+    html += '<button class="btn-del" data-nombre="' + escaparAttr(data.responsables[i]) + '">&#x1F5D1; Eliminar</button>';
+    html += '</div>';
+  }
+  list.innerHTML = html;
+
+  list.querySelectorAll('.btn-del').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      eliminarResponsable(btn.getAttribute('data-nombre'));
+    });
+  });
+  poblarDatalistResponsables();
+};
+
+window.agregarResponsable = function() {
+  var input = document.getElementById('nuevoResponsable');
+  var nombre = input.value.trim();
+  if (!nombre) { mostrarAlerta('alertResponsables', 'error', 'Ingrese un nombre.'); return; }
+  var data = cargarDatos();
+  var existe = data.responsables.some(function(n) { return n.toLowerCase() === nombre.toLowerCase(); });
+  if (existe) {
+    mostrarAlerta('alertResponsables', 'error', 'Ese nombre ya existe en la lista.');
+    return;
+  }
+  data.responsables.push(nombre);
+  data.responsables.sort(function(a, b) { return a.toLowerCase().localeCompare(b.toLowerCase()); });
+  guardarDatos(data);
+  input.value = '';
+  renderResponsables();
+  mostrarToast('Responsable agregado');
+};
+
+window.eliminarResponsable = function(nombre) {
+  abrirModal('Eliminar Responsable', '\u00BFEliminar a "' + nombre + '" de la lista? Los registros existentes con este responsable no se modificar\u00E1n.', function() {
+    var data = cargarDatos();
+    data.responsables = data.responsables.filter(function(n) { return n !== nombre; });
+    guardarDatos(data);
+    renderResponsables();
+    mostrarToast('Responsable eliminado');
+  });
+};
+
+document.getElementById('nuevoResponsable').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') agregarResponsable();
+});
+
+/* ==================== MENÃš DE MÃ“DULOS ==================== */
+var menuModulos = [
+  { id: 'inicio', titulo: 'Inicio', icono: '\uD83C\uDFE0' },
+  { id: 'riego', titulo: 'Riego y Fertilizaci\u00f3n', icono: '\uD83D\uDCA7' },
+  { id: 'fitosanitarios', titulo: 'Aplicaciones Fitosanitarias', icono: '\uD83E\uDDEA', esModulo: true },
+  { id: 'inventario', titulo: 'Inventario Bodega', icono: '\uD83D\uDCE6' },
+  { id: 'nogal', titulo: 'Labores Nogal', icono: '\uD83C\uDF30', hijos: [
+    { id: 'nogal-poda', titulo: 'Poda' },
+    { id: 'nogal-cosecha', titulo: 'Cosecha' }
+  ]},
+  { id: 'uva', titulo: 'Labores Uva', icono: '\uD83C\uDF47', hijos: [
+    { id: 'uva-poda', titulo: 'Poda' },
+    { id: 'uva-desbrote', titulo: 'Desbrote' },
+    { id: 'uva-carga-raleo', titulo: 'Carga y Raleo' },
+    { id: 'uva-ventanas', titulo: 'Ventanas' },
+    { id: 'uva-cosecha', titulo: 'Cosecha' }
+  ]},
+  { id: 'cerezo', titulo: 'Labores Cerezo', icono: '\uD83C\uDF52', hijos: [
+    { id: 'cerezo-poda', titulo: 'Poda' },
+    { id: 'cerezo-raleo', titulo: 'Raleo' },
+    { id: 'cerezo-cosecha', titulo: 'Cosecha' }
+  ]},
+  { id: 'generales', titulo: 'Labores Generales', icono: '\uD83D\uDE9C' },
+  { id: 'mantenedores', titulo: 'Mantenedores', icono: '\u2699\uFE0F' }
+];
+
+function construirMenu() {
+  var menu = document.getElementById('drawerMenu');
+  var html = '';
+  for (var i = 0; i < menuModulos.length; i++) {
+    var m = menuModulos[i];
+    if (m.hijos && m.hijos.length) {
+      html += '<button class="menu-item parent" data-parent="' + m.id + '">' +
+        '<span class="m-icon">' + m.icono + '</span>' +
+        '<span>' + m.titulo + '</span>' +
+        '<span class="m-caret">\u25BC</span>' +
+        '</button>' +
+        '<div class="submenu" id="submenu-' + m.id + '">';
+      for (var j = 0; j < m.hijos.length; j++) {
+        var h = m.hijos[j];
+        html += '<button class="submenu-item" data-page="placeholder" data-titulo="' + escaparAttr(m.titulo + ' \u2014 ' + h.titulo) + '" data-icono="' + m.icono + '" data-ruta="' + escaparAttr(m.titulo + ' \u203A ' + h.titulo) + '">' + h.titulo + '</button>';
+      }
+      html += '</div>';
+    } else if (m.esModulo) {
+      html += '<button class="menu-item" data-page="fitosanitarios" data-titulo="' + escaparAttr(m.titulo) + '" data-icono="' + m.icono + '">' +
+        '<span class="m-icon">' + m.icono + '</span><span>' + m.titulo + '</span></button>';
+    } else if (m.id === 'inicio') {
+      html += '<button class="menu-item active" data-page="inicio" data-titulo="Inicio" data-icono="' + m.icono + '">' +
+        '<span class="m-icon">' + m.icono + '</span><span>' + m.titulo + '</span></button>';
+    } else {
+      html += '<button class="menu-item" data-page="placeholder" data-titulo="' + escaparAttr(m.titulo) + '" data-icono="' + m.icono + '" data-ruta="' + escaparAttr(m.titulo) + '">' +
+        '<span class="m-icon">' + m.icono + '</span><span>' + m.titulo + '</span></button>';
+    }
+  }
+  menu.innerHTML = html;
+
+  menu.querySelectorAll('.menu-item.parent').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var id = btn.getAttribute('data-parent');
+      var sub = document.getElementById('submenu-' + id);
+      var isOpen = sub.classList.contains('open');
+      menu.querySelectorAll('.submenu').forEach(function(s) { s.classList.remove('open'); });
+      menu.querySelectorAll('.menu-item.parent').forEach(function(b) { b.classList.remove('expanded'); });
+      if (!isOpen) {
+        sub.classList.add('open');
+        btn.classList.add('expanded');
+      }
+    });
+  });
+
+  menu.querySelectorAll('[data-page]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      irAPagina(btn.getAttribute('data-page'), btn.getAttribute('data-titulo'), btn.getAttribute('data-icono'), btn.getAttribute('data-ruta'));
+      menu.querySelectorAll('.menu-item, .submenu-item').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+    });
+  });
+}
+
+function abrirDrawer() {
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawerOverlay').classList.add('open');
+}
+function cerrarDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawerOverlay').classList.remove('open');
+}
+
+document.getElementById('menuToggle').addEventListener('click', abrirDrawer);
+document.getElementById('drawerOverlay').addEventListener('click', cerrarDrawer);
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') cerrarDrawer();
+});
+
+function irAPagina(pageId, titulo, icono, ruta) {
+  cerrarDrawer();
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+
+  var hTitle = document.getElementById('headerTitle');
+  var hSub = document.getElementById('headerSubtitle');
+
+  if (pageId === 'placeholder') {
+    document.getElementById('phIcon').textContent = icono || '\uD83D\uDEA7';
+    document.getElementById('phTitulo').textContent = titulo || 'M\u00f3dulo';
+    document.getElementById('phRuta').textContent = ruta || '';
+    document.getElementById('page-placeholder').classList.add('active');
+    if (hTitle) hTitle.textContent = titulo || 'M\u00f3dulo';
+    if (hSub) hSub.textContent = 'M\u00f3dulo en construcci\u00f3n';
+  } else {
+    var page = document.getElementById('page-' + pageId);
+    if (page) page.classList.add('active');
+    if (pageId === 'inicio') {
+      if (hTitle) hTitle.textContent = 'Gesti\u00f3n Agr\u00edcola';
+      if (hSub) hSub.textContent = 'Campo \u00b7 Temporada 2026';
+    } else {
+      if (hTitle) hTitle.textContent = titulo || '';
+      if (hSub) hSub.textContent = pageId === 'fitosanitarios' ? 'Registro de aplicaciones' : '';
+    }
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ==================== BIENVENIDA: FECHA ==================== */
+function iniciarFechaBienvenida() {
+  var ahora = new Date();
+  var dias = ['domingo','lunes','martes','mi\u00e9rcoles','jueves','viernes','s\u00e1bado'];
+  var meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  var texto = dias[ahora.getDay()] + ', ' + ahora.getDate() + ' de ' + meses[ahora.getMonth()] + ' de ' + ahora.getFullYear();
+  document.getElementById('welcomeDate').textContent = texto.charAt(0).toUpperCase() + texto.slice(1);
+
+  var h = ahora.getHours();
+  var saludo = 'Bienvenido';
+  if (h >= 6 && h < 12) saludo = 'Buenos d\u00edas';
+  else if (h >= 12 && h < 20) saludo = 'Buenas tardes';
+  else saludo = 'Buenas noches';
+  document.getElementById('welcomeGreeting').textContent = saludo;
+}
+
+/* ==================== GPS + CLIMA ==================== */
+var coordsDefault = { lat: -35.4264, lon: -71.6554, nombre: 'Talca, Maule (por defecto)' };
+
+function obtenerCoordenadas(cb) {
+  var saved = localStorage.getItem('ultima_ubicacion');
+  if (saved) {
+    try {
+      var c = JSON.parse(saved);
+      cb(c.lat, c.lon);
+      return;
+    } catch(e) {}
+  }
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(pos) {
+        var lat = pos.coords.latitude;
+        var lon = pos.coords.longitude;
+        localStorage.setItem('ultima_ubicacion', JSON.stringify({ lat: lat, lon: lon }));
+        cb(lat, lon);
+      },
+      function() {
+        cb(coordsDefault.lat, coordsDefault.lon);
+      },
+      { timeout: 10000, maximumAge: 600000 }
+    );
+  } else {
+    cb(coordsDefault.lat, coordsDefault.lon);
+  }
+}
+
+function nombreUbicacion(lat, lon) {
+  fetch('https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=' + lat + '&longitude=' + lon + '&localityLanguage=es')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var nombre = d.city || d.locality || d.principalSubdivision || '';
+      if (nombre) {
+        document.getElementById('welcomeLocation').textContent = nombre + ' (' + lat.toFixed(2) + ', ' + lon.toFixed(2) + ')';
+      } else {
+        document.getElementById('welcomeLocation').textContent = lat.toFixed(2) + ', ' + lon.toFixed(2);
+      }
+    })
+    .catch(function() {
+      document.getElementById('welcomeLocation').textContent = lat.toFixed(2) + ', ' + lon.toFixed(2);
+    });
+}
+
+var weatherMap = {
+  0: ['\u2600\uFE0F','Despejado'],
+  1: ['\uD83C\uDF24\uFE0F','Mayormente despejado'],
+  2: ['\u26C5','Parcialmente nublado'],
+  3: ['\u2601\uFE0F','Nublado'],
+  45: ['\uD83C\uDF2B\uFE0F','Niebla'],
+  48: ['\uD83C\uDF2B\uFE0F','Niebla con escarcha'],
+  51: ['\uD83C\uDF26\uFE0F','Llovizna leve'],
+  53: ['\uD83C\uDF26\uFE0F','Llovizna'],
+  55: ['\uD83C\uDF26\uFE0F','Llovizna intensa'],
+  56: ['\uD83C\uDF26\uFE0F','Llovizna helada'],
+  57: ['\uD83C\uDF26\uFE0F','Llovizna helada intensa'],
+  61: ['\uD83C\uDF27\uFE0F','Lluvia leve'],
+  63: ['\uD83C\uDF27\uFE0F','Lluvia moderada'],
+  65: ['\uD83C\uDF27\uFE0F','Lluvia intensa'],
+  66: ['\uD83C\uDF27\uFE0F','Lluvia helada'],
+  67: ['\uD83C\uDF27\uFE0F','Lluvia helada intensa'],
+  71: ['\uD83C\uDF28\uFE0F','Nevada leve'],
+  73: ['\uD83C\uDF28\uFE0F','Nevada'],
+  75: ['\uD83C\uDF28\uFE0F','Nevada intensa'],
+  77: ['\uD83C\uDF28\uFE0F','Granizo menudo'],
+  80: ['\uD83C\uDF26\uFE0F','Chubascos leves'],
+  81: ['\uD83C\uDF26\uFE0F','Chubascos'],
+  82: ['\uD83C\uDF26\uFE0F','Chubascos intensos'],
+  85: ['\uD83C\uDF28\uFE0F','Chubascos de nieve'],
+  86: ['\uD83C\uDF28\uFE0F','Chubascos de nieve intensos'],
+  95: ['\u26C8\uFE0F','Tormenta'],
+  96: ['\u26C8\uFE0F','Tormenta con granizo'],
+  99: ['\u26C8\uFE0F','Tormenta con granizo fuerte']
+};
+
+function cargarClima(lat, lon) {
+  var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon +
+    '&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m' +
+    '&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max' +
+    '&timezone=auto';
+
+  fetch(url)
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var cur = d.current;
+      var daily = d.daily;
+      var w = weatherMap[cur.weather_code] || ['\uD83C\uDF24\uFE0F', 'Clima variable'];
+      var html =
+        '<div class="weather-main">' +
+          '<div class="weather-icon">' + w[0] + '</div>' +
+          '<div>' +
+            '<div class="weather-temp">' + Math.round(cur.temperature_2m) + '\u00B0</div>' +
+            '<div class="weather-desc">' + w[1] + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="weather-details">' +
+          '<span>\u2B06\uFE0F M\u00e1x ' + Math.round(daily.temperature_2m_max[0]) + '\u00B0</span>' +
+          '<span>\u2B07\uFE0F M\u00edn ' + Math.round(daily.temperature_2m_min[0]) + '\u00B0</span>' +
+          '<span>\uD83D\uDCA7 Humedad ' + cur.relative_humidity_2m + '%</span>' +
+          '<span>\uD83C\uDF2C\uFE0F Viento ' + Math.round(cur.wind_speed_10m) + ' km/h</span>' +
+          '<span>\u2614 Prob. lluvia ' + (daily.precipitation_probability_max ? daily.precipitation_probability_max[0] : 0) + '%</span>' +
+        '</div>';
+      document.getElementById('weatherContent').innerHTML = html;
+    })
+    .catch(function() {
+      document.getElementById('weatherContent').innerHTML =
+        '<div class="weather-error">Sin conexi\u00f3n \u2014 clima no disponible. <button class="btn-gps" onclick="iniciarBienvenida()">Reintentar</button></div>';
+    });
+}
+
+window.iniciarBienvenida = function() {
+  iniciarFechaBienvenida();
+  document.getElementById('welcomeLocation').innerHTML = '<span class="skeleton skeleton-line" style="width:160px;display:inline-block;">&nbsp;</span>';
+  document.getElementById('weatherContent').innerHTML =
+    '<div class="weather-main">' +
+      '<div class="skeleton" style="width:56px;height:56px;border-radius:50%;">&nbsp;</div>' +
+      '<div style="flex:1;"><div class="skeleton" style="width:80px;height:34px;">&nbsp;</div>' +
+      '<div class="skeleton skeleton-line" style="width:130px;">&nbsp;</div></div>' +
+    '</div>' +
+    '<div class="weather-details">' +
+      '<span class="skeleton skeleton-line" style="width:90px;">&nbsp;</span>' +
+      '<span class="skeleton skeleton-line" style="width:90px;">&nbsp;</span>' +
+      '<span class="skeleton skeleton-line" style="width:110px;">&nbsp;</span>' +
+    '</div>';
+  obtenerCoordenadas(function(lat, lon) {
+    nombreUbicacion(lat, lon);
+    cargarClima(lat, lon);
+  });
+};
+
+/* ==================== INIT ==================== */
+construirMapaIngredientes();
+poblarDatalistGrupos();
+poblarDatalistResponsables();
+filtrarProductosPorGrupo(null);
+renderResponsables();
+renderHistorial();
+construirMenu();
+iniciarBienvenida();
+
+})();
+</script>
+</body>
+</html>
