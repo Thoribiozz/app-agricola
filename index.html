@@ -691,6 +691,87 @@ input[data-autofilled="true"] { background: var(--fern-wash) !important; border-
 .page { display: none; }
 .page.active { display: block; }
 
+/* ---------- CUARTELES ---------- */
+.cuarteles-wrap { padding: 12px; max-width: 720px; margin: 0 auto; }
+.cuarteles-hero {
+  background: linear-gradient(135deg, var(--fern-dark) 0%, var(--fern) 60%, var(--fern-light) 100%);
+  color: var(--white);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 18px 16px;
+  margin-bottom: 12px;
+}
+.ch-title { font-weight: 700; font-size: 1.05rem; letter-spacing: -0.02em; }
+.ch-sub { font-size: 0.72rem; opacity: 0.85; margin-top: 2px; }
+.ch-stats { display: flex; gap: 8px; margin-top: 14px; }
+.ch-stat {
+  flex: 1;
+  min-width: 68px;
+  background: rgba(255,255,255,0.14);
+  border: 1px solid rgba(255,255,255,0.22);
+  border-radius: var(--r-md);
+  padding: 10px 6px;
+  text-align: center;
+}
+.ch-stat .v { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 700; font-size: 1.1rem; line-height: 1.1; }
+.ch-stat .l { font-size: 0.56rem; text-transform: uppercase; letter-spacing: 0.6px; opacity: 0.85; margin-top: 3px; }
+
+.chips-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.chip {
+  padding: 7px 14px;
+  border-radius: var(--r-pill);
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s var(--ease);
+}
+.chip.active { background: var(--fern); border-color: var(--fern); color: var(--white); }
+
+.cuarteles-grid { display: grid; grid-template-columns: 1fr; gap: 10px; padding-bottom: 18px; }
+@media (min-width: 540px) { .cuarteles-grid { grid-template-columns: 1fr 1fr; } }
+
+.cuartel-card {
+  --acc: var(--fern);
+  --acc-pale: var(--fern-pale);
+  background: var(--white);
+  border-radius: var(--r-md);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: box-shadow 0.25s var(--ease), transform 0.25s var(--ease);
+}
+.cuartel-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+.cuartel-card.esp-uva { --acc: #7a5c90; --acc-pale: #f1eaf6; }
+.cuartel-card.esp-cereza { --acc: var(--terracotta); --acc-pale: var(--terracotta-light); }
+.cuartel-card.esp-vacio { --acc: var(--text-muted); --acc-pale: var(--border-light); }
+
+.cc-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-left: 4px solid var(--acc); }
+.cc-icon { font-size: 1.5rem; line-height: 1; }
+.cc-id { flex: 1; min-width: 0; }
+.cc-name { font-weight: 700; font-size: 0.95rem; color: var(--text); }
+.cc-variedad { font-size: 0.72rem; color: var(--text-secondary); margin-top: 1px; }
+.cc-badge {
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: var(--r-pill);
+  background: var(--acc-pale);
+  color: var(--acc);
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.cc-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; padding: 2px 14px 10px; }
+.cc-stat .k { font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); }
+.cc-stat .n { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 700; font-size: 0.85rem; color: var(--text); margin-top: 1px; }
+.cc-bar-wrap { padding: 0 14px 12px; }
+.cc-bar { height: 6px; background: var(--border-light); border-radius: var(--r-pill); overflow: hidden; }
+.cc-bar > div { height: 100%; background: var(--acc); border-radius: var(--r-pill); }
+
 /* ---------- WELCOME ---------- */
 .welcome-hero {
   position: relative;
@@ -946,6 +1027,19 @@ input[data-autofilled="true"] { background: var(--fern-wash) !important; border-
         </div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- PAGE: CUARTELES -->
+<div class="page" id="page-cuarteles">
+  <div class="cuarteles-wrap">
+    <div class="cuarteles-hero">
+      <div class="ch-title">&#x1F5FA;&#xFE0F; Resumen del Campo</div>
+      <div class="ch-sub">Campo Aguirrana &middot; Distribuci&oacute;n por cuartel</div>
+      <div class="ch-stats" id="cuartelesStats"></div>
+    </div>
+    <div class="chips-row" id="cuartelesChips"></div>
+    <div class="cuarteles-grid" id="cuartelesGrid"></div>
   </div>
 </div>
 
@@ -1936,8 +2030,106 @@ document.getElementById('nuevoResponsable').addEventListener('keydown', function
 });
 
 /* ==================== MENÃš DE MÃ“DULOS ==================== */
+/* ==================== CUARTELES ==================== */
+var cuartelesData = [
+  { n: 1, especie: 'Uva', variedad: 'Autumn Royal', superficie: 1.5, ano: 2022, marco: '3,5 x 2,0', plantas: 2143 },
+  { n: 2, especie: 'Uva', variedad: 'Autumn Royal', superficie: 1.5, ano: 2022, marco: '3,5 x 2,0', plantas: 2143 },
+  { n: 3, especie: 'Nogal', variedad: 'Chandler', superficie: 2, ano: 2018, marco: '7,0 x 6,0', plantas: 476 },
+  { n: 4, especie: 'Uva', variedad: 'Perlon', superficie: 1.6, ano: 2011, marco: '3,5 x 2,0', plantas: 2286 },
+  { n: 5, especie: 'Nogal', variedad: 'Chandler', superficie: 1.8, ano: 2015, marco: '7,0 x 6,0', plantas: 429 },
+  { n: 6, especie: 'Nogal', variedad: 'Chandler', superficie: 1.8, ano: 2020, marco: '7,0 x 6,0', plantas: 429 },
+  { n: 7, especie: 'Cereza', variedad: 'Lapins', superficie: 1, ano: 2021, marco: '4,0 x 2,0', plantas: 1429 },
+  { n: 8, especie: 'Uva', variedad: 'Autumn Royal', superficie: 1.5, ano: 2017, marco: '3,5 x 2,0', plantas: 2143 },
+  { n: 9, especie: 'Sin plantaci\u00f3n', variedad: null, superficie: 2.4, ano: null, marco: null, plantas: null },
+  { n: 12, especie: 'Nogal', variedad: 'Chandler', superficie: 3, ano: 2012, marco: '7,0 x 6,0', plantas: 714 }
+];
+
+var especieEstilo = {
+  'Uva': { clase: 'esp-uva', icono: '\uD83C\uDF47' },
+  'Nogal': { clase: 'esp-nogal', icono: '\uD83C\uDF30' },
+  'Cereza': { clase: 'esp-cereza', icono: '\uD83C\uDF52' },
+  'Sin plantaci\u00f3n': { clase: 'esp-vacio', icono: '\uD83D\uDFEB' }
+};
+
+var filtroEspecieCuartel = 'Todas';
+
+function fmtCL(n, dec) {
+  return Number(n).toLocaleString('es-CL', { minimumFractionDigits: 0, maximumFractionDigits: (dec == null ? 0 : dec) });
+}
+
+function renderCuarteles() {
+  var stats = document.getElementById('cuartelesStats');
+  var chipsEl = document.getElementById('cuartelesChips');
+  var grid = document.getElementById('cuartelesGrid');
+  if (!stats || !chipsEl || !grid) return;
+
+  var totalSup = 0;
+  var totalPlantas = 0;
+  var especies = [];
+  var especiesReales = [];
+  var maxSup = 0;
+  for (var i = 0; i < cuartelesData.length; i++) {
+    var c = cuartelesData[i];
+    totalSup += c.superficie;
+    if (c.plantas) totalPlantas += c.plantas;
+    if (c.superficie > maxSup) maxSup = c.superficie;
+    if (especies.indexOf(c.especie) === -1) especies.push(c.especie);
+    if (c.especie !== 'Sin plantaci\u00f3n' && especiesReales.indexOf(c.especie) === -1) especiesReales.push(c.especie);
+  }
+  totalSup = Math.round(totalSup * 10) / 10;
+
+  stats.innerHTML =
+    '<div class="ch-stat"><div class="v">' + fmtCL(totalSup, 1) + '</div><div class="l">Hect\u00e1reas</div></div>' +
+    '<div class="ch-stat"><div class="v">' + fmtCL(totalPlantas) + '</div><div class="l">Plantas</div></div>' +
+    '<div class="ch-stat"><div class="v">' + cuartelesData.length + '</div><div class="l">Cuarteles</div></div>' +
+    '<div class="ch-stat"><div class="v">' + especiesReales.length + '</div><div class="l">Especies</div></div>';
+
+  var chips = ['Todas'].concat(especies);
+  var ch = '';
+  for (var k = 0; k < chips.length; k++) {
+    ch += '<button class="chip' + (filtroEspecieCuartel === chips[k] ? ' active' : '') + '" data-esp="' + escaparAttr(chips[k]) + '">' + escaparHtml(chips[k]) + '</button>';
+  }
+  chipsEl.innerHTML = ch;
+  chipsEl.querySelectorAll('.chip').forEach(function(b) {
+    b.addEventListener('click', function() {
+      filtroEspecieCuartel = b.getAttribute('data-esp');
+      renderCuarteles();
+    });
+  });
+
+  var html = '';
+  var visibles = 0;
+  for (var g = 0; g < cuartelesData.length; g++) {
+    var q = cuartelesData[g];
+    if (filtroEspecieCuartel !== 'Todas' && q.especie !== filtroEspecieCuartel) continue;
+    visibles++;
+    var est = especieEstilo[q.especie] || especieEstilo['Sin plantaci\u00f3n'];
+    var pct = Math.round(q.superficie / maxSup * 100);
+    html += '<div class="cuartel-card ' + est.clase + '">';
+    html += '<div class="cc-head">';
+    html += '<span class="cc-icon">' + est.icono + '</span>';
+    html += '<div class="cc-id"><div class="cc-name">Cuartel ' + q.n + '</div>';
+    html += '<div class="cc-variedad">' + escaparHtml(q.variedad || 'Sin plantaci\u00f3n') + '</div></div>';
+    html += '<span class="cc-badge">' + escaparHtml(q.especie) + '</span>';
+    html += '</div>';
+    html += '<div class="cc-stats">';
+    html += '<div class="cc-stat"><div class="k">Superficie</div><div class="n">' + fmtCL(q.superficie, 1) + ' ha</div></div>';
+    html += '<div class="cc-stat"><div class="k">A\u00f1o plantaci\u00f3n</div><div class="n">' + (q.ano || '-') + '</div></div>';
+    html += '<div class="cc-stat"><div class="k">Marco plantaci\u00f3n</div><div class="n">' + escaparHtml(q.marco || '-') + '</div></div>';
+    html += '<div class="cc-stat"><div class="k">N\u00b0 Plantas</div><div class="n">' + (q.plantas != null ? fmtCL(q.plantas) : '-') + '</div></div>';
+    html += '</div>';
+    html += '<div class="cc-bar-wrap"><div class="cc-bar"><div style="width:' + pct + '%"></div></div></div>';
+    html += '</div>';
+  }
+  if (visibles === 0) {
+    html = '<div class="empty-state"><div class="empty-icon">\uD83C\uDF3E</div><p>No hay cuarteles para este filtro</p></div>';
+  }
+  grid.innerHTML = html;
+}
+
 var menuModulos = [
   { id: 'inicio', titulo: 'Inicio', icono: '\uD83C\uDFE0' },
+  { id: 'cuarteles', titulo: 'Cuarteles', icono: '\uD83D\uDDFA\uFE0F', esModulo: true },
   { id: 'riego', titulo: 'Riego y Fertilizaci\u00f3n', icono: '\uD83D\uDCA7' },
   { id: 'fitosanitarios', titulo: 'Aplicaciones Fitosanitarias', icono: '\uD83E\uDDEA', esModulo: true },
   { id: 'inventario', titulo: 'Inventario Bodega', icono: '\uD83D\uDCE6' },
@@ -1979,7 +2171,7 @@ function construirMenu() {
       }
       html += '</div>';
     } else if (m.esModulo) {
-      html += '<button class="menu-item" data-page="fitosanitarios" data-titulo="' + escaparAttr(m.titulo) + '" data-icono="' + m.icono + '">' +
+      html += '<button class="menu-item" data-page="' + m.id + '" data-titulo="' + escaparAttr(m.titulo) + '" data-icono="' + m.icono + '">' +
         '<span class="m-icon">' + m.icono + '</span><span>' + m.titulo + '</span></button>';
     } else if (m.id === 'inicio') {
       html += '<button class="menu-item active" data-page="inicio" data-titulo="Inicio" data-icono="' + m.icono + '">' +
@@ -2051,7 +2243,7 @@ function irAPagina(pageId, titulo, icono, ruta) {
       if (hSub) hSub.textContent = 'Campo \u00b7 Temporada 2026';
     } else {
       if (hTitle) hTitle.textContent = titulo || '';
-      if (hSub) hSub.textContent = pageId === 'fitosanitarios' ? 'Registro de aplicaciones' : '';
+      if (hSub) hSub.textContent = pageId === 'fitosanitarios' ? 'Registro de aplicaciones' : (pageId === 'cuarteles' ? 'Campo Aguirrana \u00b7 Detalle por cuartel' : '');
     }
   }
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2212,6 +2404,7 @@ poblarDatalistResponsables();
 filtrarProductosPorGrupo(null);
 renderResponsables();
 renderHistorial();
+renderCuarteles();
 construirMenu();
 iniciarBienvenida();
 
