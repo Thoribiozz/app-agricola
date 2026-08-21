@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -110,7 +110,8 @@ body {
 .record-badge,
 .mini-table td:nth-child(5),
 .mini-table td:nth-child(6),
-.mini-table td:nth-child(7) {
+.mini-table td:nth-child(7),
+.mini-table td:nth-child(8) {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
 }
@@ -293,7 +294,7 @@ body {
 }
 .table-wrapper table {
   width: 100%;
-  min-width: 1000px;
+  min-width: 1180px;
   border-collapse: collapse;
   font-size: 0.75rem;
 }
@@ -345,6 +346,10 @@ body {
   border-style: dashed;
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
+}
+.table-wrapper td input.ro-text[readonly] {
+  font-family: inherit;
+  font-variant-numeric: normal;
 }
 .btn-del-row {
   background: none;
@@ -861,6 +866,87 @@ input[data-autofilled="true"] { background: var(--fern-wash) !important; border-
 .fcb-sub { font-size: 0.68rem; color: var(--text-secondary); }
 .fcb-cambiar { margin-left: auto; }
 
+/* ---------- LOGIN ---------- */
+.login-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: linear-gradient(160deg, var(--fern-dark) 0%, var(--fern) 60%, var(--fern-light) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.login-card {
+  background: var(--white);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 28px 22px;
+  width: 100%;
+  max-width: 340px;
+  text-align: center;
+}
+.login-card .logo { font-size: 2.2rem; line-height: 1; }
+.login-card h2 { font-size: 1.15rem; color: var(--fern-dark); margin: 8px 0 2px; letter-spacing: -0.02em; }
+.login-card .sub { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 18px; text-transform: uppercase; letter-spacing: 0.5px; }
+.login-card input {
+  width: 100%;
+  padding: 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+  font-family: inherit;
+  color: var(--text);
+}
+.login-card input:focus { outline: none; border-color: var(--fern); box-shadow: 0 0 0 3px rgba(74,124,89,0.12); }
+.login-error {
+  background: var(--terracotta-light);
+  color: var(--terracotta);
+  border-radius: var(--r-sm);
+  font-size: 0.78rem;
+  font-weight: 500;
+  padding: 9px 12px;
+  margin-bottom: 10px;
+  display: none;
+  text-align: left;
+}
+.login-error.visible { display: block; }
+.usuario-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border-light);
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+.usuario-chip .u-nombre { font-weight: 700; color: var(--text); }
+.usuario-chip button {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--terracotta);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 6px 8px;
+  border-radius: var(--r-sm);
+}
+.usuario-chip button:hover { background: var(--terracotta-light); }
+.rol-badge {
+  font-size: 0.58rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: var(--r-pill);
+  background: var(--marigold-pale);
+  color: var(--marigold-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 /* ---------- WELCOME ---------- */
 .welcome-hero {
   position: relative;
@@ -1029,6 +1115,19 @@ input[data-autofilled="true"] { background: var(--fern-wash) !important; border-
 
 <a href="#page-inicio" class="skip-link">Ir al contenido</a>
 
+<!-- LOGIN -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-card">
+    <div class="logo">&#x1F331;</div>
+    <h2>Bit&aacute;cora Agr&iacute;cola</h2>
+    <div class="sub">Campo Aguirrana &middot; Acceso restringido</div>
+    <div class="login-error" id="loginError"></div>
+    <input type="email" id="loginEmail" placeholder="Correo (ej: marcelo@campo.cl)" autocomplete="username" autocapitalize="off">
+    <input type="password" id="loginPass" placeholder="Contrase&ntilde;a" autocomplete="current-password">
+    <button class="btn btn-primary" id="btnLogin" onclick="hacerLogin()">Ingresar</button>
+  </div>
+</div>
+
 <header class="app-header">
   <button class="menu-toggle" id="menuToggle" aria-label="Abrir men&uacute;">&#x2630;</button>
   <h1 id="headerTitle">Gesti&oacute;n Agr&iacute;cola</h1>
@@ -1043,6 +1142,7 @@ input[data-autofilled="true"] { background: var(--fern-wash) !important; border-
     <div class="d-sub">Gesti&oacute;n Agr&iacute;cola</div>
   </div>
   <nav class="drawer-menu" id="drawerMenu"></nav>
+  <div class="usuario-chip" id="usuarioChip"></div>
   <div class="drawer-footer">Bit&aacute;cora Agr&iacute;cola v2.0</div>
 </aside>
 
@@ -1142,9 +1242,6 @@ input[data-autofilled="true"] { background: var(--fern-wash) !important; border-
   <button class="tab-btn" data-tab="historial">
     <span class="tab-icon">&#x1F4CB;</span> Historial
   </button>
-  <button class="tab-btn" data-tab="responsables">
-    <span class="tab-icon">&#x1F465;</span> Responsables
-  </button>
 </nav>
 
 <main class="main-content">
@@ -1193,14 +1290,18 @@ input[data-autofilled="true"] { background: var(--fern-wash) !important; border-
           <table>
             <thead>
               <tr>
+                <th>Especie</th>
+                <th>Variedad</th>
                 <th>Estado Fenol&oacute;gico</th>
                 <th>Objetivo / Plaga</th>
-                <th>Grupo</th>
+                <th>Tipo de Producto</th>
                 <th>Producto Comercial</th>
                 <th>Ingrediente Activo</th>
                 <th>Dosis (cc) / 100 L</th>
-                <th>Mojamiento (Lts)</th>
+                <th>Mojamiento (Lts/ha)</th>
                 <th>Total Producto Comercial (Lts o Kg)</th>
+                <th>Temperatura (&deg;C)</th>
+                <th>Viento</th>
                 <th>Responsable</th>
                 <th></th>
               </tr>
@@ -1212,7 +1313,6 @@ input[data-autofilled="true"] { background: var(--fern-wash) !important; border-
       </div>
 
       <datalist id="productosSAG"></datalist>
-      <datalist id="gruposList"></datalist>
       <datalist id="responsablesDatalist"></datalist>
 
       <div class="card" id="comentariosCard">
@@ -1256,23 +1356,23 @@ input[data-autofilled="true"] { background: var(--fern-wash) !important; border-
     <div id="historialContainer"></div>
   </section>
 
-  <!-- TAB: RESPONSABLES -->
-  <section class="tab-panel" id="tab-responsables">
-    <div class="card">
-      <div class="card-title">&#x1F465; Lista de Responsables</div>
-      <div id="responsablesList"></div>
-      <div class="add-user-row">
-        <input type="text" id="nuevoResponsable" placeholder="Nombre del responsable...">
-        <button class="btn btn-primary btn-sm" onclick="agregarResponsable()">Agregar</button>
-      </div>
-    </div>
-    <div id="alertResponsables" class="alert"></div>
-  </section>
-
 </main>
 
 </div>
 <!-- FIN PAGE: FITOSANITARIOS -->
+
+<!-- PAGE: MANTENEDORES -->
+<div class="page" id="page-mantenedores">
+  <main class="main-content">
+    <div class="card">
+      <div class="card-title">&#x1F465; Usuarios del Sistema</div>
+      <div id="responsablesList"></div>
+      <div class="hint-text" style="padding:10px 4px 2px;text-align:left;">Para agregar usuarios o cambiar contrase&ntilde;as se usa el panel de Supabase (Authentication &rsaquo; Users). Av&iacute;same y te ayudo.</div>
+    </div>
+    <div id="alertResponsables" class="alert"></div>
+  </main>
+</div>
+<!-- FIN PAGE: MANTENEDORES -->
 
 <!-- PAGE: PLACEHOLDER GENÃ‰RICO -->
 <div class="page" id="page-placeholder">
@@ -1399,12 +1499,306 @@ function guardarDatos(data) {
 
 var editandoId = null;
 
+/* ==================== NUBE: SUPABASE ==================== */
+var SUPABASE_URL = 'https://smmrizdyjwsqdfcacpzp.supabase.co';
+var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNtbXJpemR5andzcWRmY2FjcHpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyNjg5MTksImV4cCI6MjEwMjg0NDkxOX0.f1xwFhZxjexUIGcf9sUkyA299xIrYhXzNJ1BL7KKIOs';
+var SESION_KEY = 'sb_sesion';
+var OUTBOX_KEY = 'sb_outbox';
+var sesion = null;
+var perfilesNube = [];
+var sincronizando = false;
+
+function cargarSesion() {
+  try {
+    var s = JSON.parse(localStorage.getItem(SESION_KEY));
+    if (s && s.accessToken) sesion = s;
+  } catch(e) {}
+}
+function guardarSesion() { if (sesion) localStorage.setItem(SESION_KEY, JSON.stringify(sesion)); }
+function limpiarSesion() { sesion = null; localStorage.removeItem(SESION_KEY); }
+function esAdmin() { return !!(sesion && sesion.rol === 'admin'); }
+
+async function refrescarSesion() {
+  if (!sesion || !sesion.refreshToken) return false;
+  try {
+    var r = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=refresh_token', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_ANON, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: sesion.refreshToken })
+    });
+    if (!r.ok) return false;
+    var d = await r.json();
+    sesion.accessToken = d.access_token;
+    sesion.refreshToken = d.refresh_token;
+    sesion.expiresAt = Date.now() + (d.expires_in * 1000);
+    guardarSesion();
+    return true;
+  } catch(e) { return false; }
+}
+
+async function sbFetch(path, opts) {
+  opts = opts || {};
+  var headers = { 'apikey': SUPABASE_ANON, 'Content-Type': 'application/json' };
+  if (sesion && sesion.accessToken) headers['Authorization'] = 'Bearer ' + sesion.accessToken;
+  if (opts.prefer) headers['Prefer'] = opts.prefer;
+  var r = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
+    method: opts.method || 'GET',
+    headers: headers,
+    body: opts.body ? JSON.stringify(opts.body) : undefined
+  });
+  if (r.status === 401) {
+    if (await refrescarSesion()) return sbFetch(path, opts);
+    throw new Error('sesion expirada');
+  }
+  if (!r.ok) throw new Error('API ' + r.status);
+  if (r.status === 204) return null;
+  var txt = await r.text();
+  return txt ? JSON.parse(txt) : null;
+}
+
+/* ---------- LOGIN ---------- */
+window.hacerLogin = async function() {
+  var email = document.getElementById('loginEmail').value.trim();
+  var pass = document.getElementById('loginPass').value;
+  var err = document.getElementById('loginError');
+  var btn = document.getElementById('btnLogin');
+  err.classList.remove('visible');
+  if (!email || !pass) {
+    err.textContent = 'Ingrese correo y contrase\u00f1a.';
+    err.classList.add('visible');
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = 'Ingresando...';
+  try {
+    var r = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=password', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_ANON, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email, password: pass })
+    });
+    var d = await r.json();
+    if (!r.ok) {
+      err.textContent = 'Correo o contrase\u00f1a incorrectos.';
+      err.classList.add('visible');
+      return;
+    }
+    sesion = {
+      accessToken: d.access_token,
+      refreshToken: d.refresh_token,
+      expiresAt: Date.now() + (d.expires_in * 1000),
+      userId: d.user.id,
+      email: d.user.email,
+      nombre: '',
+      rol: 'responsable'
+    };
+    await cargarPerfilActual();
+    guardarSesion();
+    entrarApp();
+    mostrarToast('Bienvenido, ' + (sesion.nombre || sesion.email));
+    sincronizarNube();
+  } catch(e) {
+    err.textContent = 'Sin conexi\u00f3n \u2014 intente nuevamente.';
+    err.classList.add('visible');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Ingresar';
+  }
+};
+
+async function cargarPerfilActual() {
+  try {
+    var rows = await sbFetch('perfiles?id=eq.' + sesion.userId + '&select=nombre,rol');
+    if (rows && rows[0]) {
+      sesion.nombre = rows[0].nombre;
+      sesion.rol = rows[0].rol;
+    } else {
+      sesion.nombre = sesion.email;
+    }
+  } catch(e) {
+    sesion.nombre = sesion.nombre || sesion.email;
+  }
+}
+
+function mostrarLogin() {
+  document.getElementById('loginOverlay').classList.remove('is-hidden');
+}
+function entrarApp() {
+  document.getElementById('loginOverlay').classList.add('is-hidden');
+  renderUsuarioChip();
+}
+window.cerrarSesion = function() {
+  abrirModal('Cerrar sesi\u00f3n', '\u00bfCerrar sesi\u00f3n en este dispositivo? Los datos sincronizados se conservan en la nube.', function() {
+    limpiarSesion();
+    location.reload();
+  });
+};
+function renderUsuarioChip() {
+  var el = document.getElementById('usuarioChip');
+  if (!el) return;
+  if (!sesion) { el.innerHTML = ''; return; }
+  el.innerHTML = '<span class="u-nombre">' + escaparHtml(sesion.nombre || sesion.email) + '</span>' +
+    '<span class="rol-badge">' + (sesion.rol === 'admin' ? 'Admin' : 'Responsable') + '</span>' +
+    '<button type="button" onclick="cerrarSesion()">Salir</button>';
+}
+
+/* ---------- SYNC OFFLINE-FIRST ---------- */
+function obtenerOutbox() {
+  try { return JSON.parse(localStorage.getItem(OUTBOX_KEY)) || []; } catch(e) { return []; }
+}
+function guardarOutbox(o) { localStorage.setItem(OUTBOX_KEY, JSON.stringify(o)); }
+function encolar(op) {
+  var o = obtenerOutbox();
+  o.push(op);
+  guardarOutbox(o);
+}
+
+async function pushRegistro(reg) {
+  var body = {
+    user_id: reg.user_id || (sesion ? sesion.userId : null),
+    fecha: reg.fecha,
+    hora: reg.hora || null,
+    cuartel: String(reg.cuartel),
+    comentarios: reg.comentarios || '',
+    productos: reg.productos || []
+  };
+  if (reg.cloud_id) {
+    await sbFetch('registros?id=eq.' + reg.cloud_id, { method: 'PATCH', body: body });
+  } else {
+    var rows = await sbFetch('registros', { method: 'POST', body: body, prefer: 'return=representation' });
+    if (rows && rows[0]) {
+      reg.cloud_id = rows[0].id;
+      reg.user_id = rows[0].user_id;
+    }
+  }
+}
+
+function pushYGuardar(reg) {
+  if (!sesion || !reg) return;
+  if (!navigator.onLine) {
+    encolar({ tipo: 'upsert', localId: reg.id });
+    mostrarToast('Sin conexi\u00f3n \u2014 se subir\u00e1 autom\u00e1ticamente');
+    return;
+  }
+  pushRegistro(reg).then(function() {
+    var d = cargarDatos();
+    for (var i = 0; i < d.registros.length; i++) {
+      if (String(d.registros[i].id) === String(reg.id)) {
+        d.registros[i].cloud_id = reg.cloud_id;
+        if (!d.registros[i].user_id) d.registros[i].user_id = reg.user_id;
+        break;
+      }
+    }
+    guardarDatos(d);
+  }).catch(function() {
+    encolar({ tipo: 'upsert', localId: reg.id });
+    mostrarToast('No se pudo subir \u2014 quedar\u00e1 pendiente');
+  });
+}
+
+async function procesarOutbox() {
+  var ops = obtenerOutbox();
+  if (!ops.length) return;
+  var data = cargarDatos();
+  var fallan = [];
+  for (var i = 0; i < ops.length; i++) {
+    var op = ops[i];
+    try {
+      if (op.tipo === 'upsert') {
+        var reg = null;
+        for (var j = 0; j < data.registros.length; j++) {
+          if (String(data.registros[j].id) === String(op.localId)) { reg = data.registros[j]; break; }
+        }
+        if (reg) await pushRegistro(reg);
+      } else if (op.tipo === 'delete') {
+        await sbFetch('registros?id=eq.' + op.cloudId, { method: 'DELETE' });
+      }
+    } catch(e) { fallan.push(op); }
+  }
+  guardarDatos(data);
+  guardarOutbox(fallan);
+}
+
+async function bajarRegistros() {
+  var rows = await sbFetch('registros?select=*&order=fecha.desc,hora.desc');
+  if (!rows) return;
+  var data = cargarDatos();
+  var pendientes = [];
+  for (var i = 0; i < data.registros.length; i++) {
+    if (!data.registros[i].cloud_id) pendientes.push(data.registros[i]);
+  }
+  var nuevos = [];
+  for (var j = 0; j < rows.length; j++) {
+    var row = rows[j];
+    nuevos.push({
+      id: 'nube-' + row.id,
+      cloud_id: row.id,
+      user_id: row.user_id,
+      fecha: row.fecha,
+      hora: row.hora || '',
+      cuartel: row.cuartel,
+      productos: row.productos || [],
+      comentarios: row.comentarios || ''
+    });
+  }
+  data.registros = pendientes.concat(nuevos);
+  guardarDatos(data);
+}
+
+async function subirPendientes() {
+  var data = cargarDatos();
+  var pend = [];
+  for (var i = 0; i < data.registros.length; i++) {
+    if (!data.registros[i].cloud_id) pend.push(data.registros[i]);
+  }
+  for (var j = 0; j < pend.length; j++) {
+    await pushRegistro(pend[j]);
+  }
+  if (pend.length) guardarDatos(data);
+  return pend.length;
+}
+
+async function cargarPerfilesNube() {
+  try {
+    var rows = await sbFetch('perfiles?select=nombre,rol&order=nombre.asc');
+    if (rows) {
+      perfilesNube = rows;
+      renderResponsables();
+      poblarDatalistResponsables();
+    }
+  } catch(e) {}
+}
+
+async function sincronizarNube() {
+  if (!sesion || sincronizando || !navigator.onLine) return;
+  sincronizando = true;
+  try {
+    await procesarOutbox();
+    await bajarRegistros();
+    var subidos = await subirPendientes();
+    await cargarPerfilesNube();
+    renderHistorial();
+    renderHistorialCuartel();
+    renderSelectorCuarteles();
+    if (subidos > 0) mostrarToast('Sincronizado: ' + subidos + ' registro(s) respaldados en la nube');
+  } catch(e) {
+    if (String(e && e.message).indexOf('sesion expirada') !== -1) {
+      limpiarSesion();
+      mostrarLogin();
+      mostrarToast('Sesi\u00f3n expirada \u2014 vuelva a ingresar');
+    }
+  } finally {
+    sincronizando = false;
+  }
+}
+
 /* ==================== CATÃLOGO DE PRODUCTOS ==================== */
 var gruposProductos = ["Fungicida", "Insecticida", "Herbicida", "Acaricida", "Nematicida", "Biol\u00f3gico", "Coadyuvante", "Regulador de Crecimiento", "Fertilizante Foliar", "Fumigante", "Molusquicida", "Otro"];
 
 var estadosFenologicos = ["Receso Invernal", "Yema Hinchada", "Brotaci\u00f3n", "Floraci\u00f3n", "Cuaja", "Crecimiento de fruto", "Envero", "Precosecha", "Postcosecha", "Ca\u00edda de Hojas"];
 
 var plagasObjetivo = ["Cancer Bacterial", "Hongos de la madera", "Botrytis", "Botrytis/Oidio", "O\u00eddio", "Polillas", "Ara\u00f1itas", "Trips", "Burritos", "Escamas", "Pudrici\u00f3n \u00c1cida", "Chanchito Blanco"];
+
+var opcionesViento = ["Ausencia", "Moderado", "Excesivo"];
 
 var productosPorGrupo = {
   "Fungicida": [
@@ -1587,23 +1981,18 @@ function filtrarProductosPorGrupo(grupo) {
   dl.appendChild(frag);
 }
 
-function poblarDatalistGrupos() {
-  var dl = document.getElementById('gruposList');
-  if (!dl) return;
-  var html = '';
-  for (var i = 0; i < gruposProductos.length; i++) {
-    html += '<option value="' + escaparAttr(gruposProductos[i]) + '"></option>';
-  }
-  dl.innerHTML = html;
-}
-
 function poblarDatalistResponsables() {
   var dl = document.getElementById('responsablesDatalist');
   if (!dl) return;
-  var responsables = cargarDatos().responsables;
+  var nombres = [];
+  if (perfilesNube.length) {
+    for (var i = 0; i < perfilesNube.length; i++) nombres.push(perfilesNube[i].nombre);
+  } else {
+    nombres = cargarDatos().responsables;
+  }
   var html = '';
-  for (var i = 0; i < responsables.length; i++) {
-    html += '<option value="' + escaparAttr(responsables[i]) + '"></option>';
+  for (var j = 0; j < nombres.length; j++) {
+    html += '<option value="' + escaparAttr(nombres[j]) + '"></option>';
   }
   dl.innerHTML = html;
 }
@@ -1642,6 +2031,7 @@ function mostrarVistaFito(vista) {
   document.getElementById('viewSelector').classList.toggle('is-hidden', vista !== 'selector');
   document.getElementById('viewCuartelDetalle').classList.toggle('is-hidden', vista !== 'detalle');
   document.getElementById('viewFormulario').classList.toggle('is-hidden', vista !== 'form');
+  if (vista === 'form') cargarTemperaturaActual();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -1807,28 +2197,59 @@ function recalcularTotal(tr) {
   tr.querySelector('.f-total').value = parseFloat((moja * dosis / 100 / 1000).toFixed(3));
 }
 
+/* ==================== TEMPERATURA AUTOMATICA (GPS + CLIMA) ==================== */
+var temperaturaActual = null;
+
+function cargarTemperaturaActual() {
+  obtenerCoordenadas(function(lat, lon) {
+    fetch('https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon + '&current=temperature_2m&timezone=auto')
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (!d || !d.current) return;
+        temperaturaActual = Math.round(d.current.temperature_2m * 10) / 10;
+        var inputs = document.querySelectorAll('#productosTableBody .f-temperatura');
+        for (var i = 0; i < inputs.length; i++) {
+          if (!inputs[i].value || inputs[i].dataset.autofilled === 'true') {
+            inputs[i].value = temperaturaActual;
+            inputs[i].dataset.autofilled = 'true';
+          }
+        }
+      })
+      .catch(function() {});
+  });
+}
+
 window.agregarFilaProducto = function(datos) {
   var tbody = document.getElementById('productosTableBody');
   var tr = document.createElement('tr');
   datos = datos || {};
+  var qc = buscarCuartel(cuartelActivo);
 
   tr.innerHTML =
+    '<td><input type="text" class="f-especie ro-text" readonly tabindex="-1" value="' + escaparAttr(datos.especie || qc.especie || '') + '"></td>' +
+    '<td><input type="text" class="f-variedad ro-text" readonly tabindex="-1" value="' + escaparAttr(datos.variedad || qc.variedad || '') + '"></td>' +
     '<td><select class="f-estado">' + opcionesHtml(estadosFenologicos) + '</select></td>' +
     '<td><select class="f-plaga">' + opcionesHtml(plagasObjetivo) + '</select></td>' +
-    '<td><input type="text" class="f-grupo" placeholder="Grupo..." list="gruposList" autocomplete="off" value="' + escaparAttr(datos.grupo || '') + '"></td>' +
+    '<td><select class="f-grupo">' + opcionesHtml(gruposProductos) + '</select></td>' +
     '<td><input type="text" class="f-producto" placeholder="Buscar producto..." list="productosSAG" autocomplete="off" value="' + escaparAttr(datos.producto || '') + '"></td>' +
     '<td><input type="text" class="f-ingrediente" placeholder="Principio activo (auto)" value="' + escaparAttr(datos.ingredienteActivo || '') + '"' + (datos.ingredienteActivo ? ' data-autofilled="false"' : '') + '></td>' +
     '<td><input type="text" class="f-dosis" placeholder="cc / 100L" value="' + escaparAttr(datos.dosis || '') + '"></td>' +
-    '<td><input type="text" class="f-mojamiento" placeholder="Lts" value="' + escaparAttr(datos.mojamiento || '') + '"></td>' +
+    '<td><input type="text" class="f-mojamiento" placeholder="Lts/ha" value="' + escaparAttr(datos.mojamiento || '') + '"></td>' +
     '<td><input type="text" class="f-total" placeholder="Auto" readonly tabindex="-1" value="' + escaparAttr(datos.total || '') + '"></td>' +
+    '<td><input type="text" class="f-temperatura" inputmode="decimal" placeholder="\u00b0C" value="' + escaparAttr(datos.temperatura || '') + '"' + (datos.temperatura ? ' data-autofilled="false"' : '') + '></td>' +
+    '<td><select class="f-viento">' + opcionesHtml(opcionesViento) + '</select></td>' +
     '<td><input type="text" class="f-responsable" placeholder="Responsable..." list="responsablesDatalist" autocomplete="off" value="' + escaparAttr(datos.responsable || '') + '"></td>' +
     '<td><button class="btn-del-row" title="Eliminar producto">&times;</button></td>';
 
   // Eventos
-  tr.querySelector('.f-grupo').addEventListener('input', function() {
+  tr.querySelector('.f-grupo').addEventListener('change', function() {
     filtrarProductosPorGrupo(this.value);
     var prodInput = tr.querySelector('.f-producto');
     if (prodInput) prodInput.focus();
+  });
+
+  tr.querySelector('.f-temperatura').addEventListener('input', function() {
+    this.dataset.autofilled = 'false';
   });
 
   tr.querySelector('.f-producto').addEventListener('input', function() {
@@ -1859,6 +2280,14 @@ window.agregarFilaProducto = function(datos) {
 
   setSelectValue(tr.querySelector('.f-estado'), datos.estadoFenologico);
   setSelectValue(tr.querySelector('.f-plaga'), datos.plaga);
+  setSelectValue(tr.querySelector('.f-grupo'), datos.grupo);
+  setSelectValue(tr.querySelector('.f-viento'), datos.viento);
+
+  var tempInput = tr.querySelector('.f-temperatura');
+  if (!tempInput.value && temperaturaActual != null) {
+    tempInput.value = temperaturaActual;
+    tempInput.dataset.autofilled = 'true';
+  }
   recalcularTotal(tr);
 
   tbody.appendChild(tr);
@@ -1876,6 +2305,8 @@ window.guardarRegistro = function() {
   for (var i = 0; i < filas.length; i++) {
     var tr = filas[i];
     var p = {
+      especie: tr.querySelector('.f-especie').value.trim(),
+      variedad: tr.querySelector('.f-variedad').value.trim(),
       estadoFenologico: tr.querySelector('.f-estado').value.trim(),
       plaga: tr.querySelector('.f-plaga').value.trim(),
       grupo: tr.querySelector('.f-grupo').value.trim(),
@@ -1884,6 +2315,8 @@ window.guardarRegistro = function() {
       dosis: tr.querySelector('.f-dosis').value.trim(),
       mojamiento: tr.querySelector('.f-mojamiento').value.trim(),
       total: tr.querySelector('.f-total').value.trim(),
+      temperatura: tr.querySelector('.f-temperatura').value.trim(),
+      viento: tr.querySelector('.f-viento').value.trim(),
       responsable: tr.querySelector('.f-responsable').value.trim()
     };
     if (!p.producto && !p.ingredienteActivo && !p.plaga) continue;
@@ -1897,6 +2330,7 @@ window.guardarRegistro = function() {
   var data = cargarDatos();
 
   if (editandoId !== null) {
+    var regEdit = null;
     for (var k = 0; k < data.registros.length; k++) {
       if (String(data.registros[k].id) === String(editandoId)) {
         data.registros[k].fecha = fecha;
@@ -1904,6 +2338,8 @@ window.guardarRegistro = function() {
         data.registros[k].cuartel = cuartel;
         data.registros[k].productos = productos;
         data.registros[k].comentarios = comentarios;
+        if (!data.registros[k].user_id) data.registros[k].user_id = sesion ? sesion.userId : null;
+        regEdit = data.registros[k];
         break;
       }
     }
@@ -1913,22 +2349,26 @@ window.guardarRegistro = function() {
       abrirCuartel(cuartelActivo);
       renderHistorial();
       renderSelectorCuarteles();
+      pushYGuardar(regEdit);
     }
   } else {
-    data.registros.push({
+    var nuevoReg = {
       id: generarId(),
       fecha: fecha,
       hora: hora,
       cuartel: cuartel,
       productos: productos,
-      comentarios: comentarios
-    });
+      comentarios: comentarios,
+      user_id: sesion ? sesion.userId : null
+    };
+    data.registros.push(nuevoReg);
     if (guardarDatos(data)) {
       mostrarToast('Registro guardado');
       limpiarFormulario();
       abrirCuartel(cuartelActivo);
       renderHistorial();
       renderSelectorCuarteles();
+      pushYGuardar(nuevoReg);
     }
   }
 };
@@ -2015,8 +2455,21 @@ window.duplicarRegistro = function(id) {
 window.eliminarRegistro = function(id) {
   abrirModal('Eliminar Registro', '\u00BFEst\u00E1 seguro de eliminar este registro? Esta acci\u00F3n no se puede deshacer.', function() {
     var data = cargarDatos();
+    var victim = null;
+    for (var i = 0; i < data.registros.length; i++) {
+      if (String(data.registros[i].id) === String(id)) { victim = data.registros[i]; break; }
+    }
     data.registros = data.registros.filter(function(r) { return String(r.id) !== String(id); });
     guardarDatos(data);
+    if (victim && victim.cloud_id && sesion) {
+      if (!navigator.onLine) {
+        encolar({ tipo: 'delete', cloudId: victim.cloud_id });
+      } else {
+        sbFetch('registros?id=eq.' + victim.cloud_id, { method: 'DELETE' }).catch(function() {
+          encolar({ tipo: 'delete', cloudId: victim.cloud_id });
+        });
+      }
+    }
     mostrarToast('Registro eliminado');
     if (String(editandoId) === String(id)) cancelarEdicion();
     renderHistorial();
@@ -2117,7 +2570,7 @@ function recordCardHtml(reg) {
   html += '</div>';
 
   html += '<div class="record-body">';
-  html += '<table class="mini-table"><thead><tr><th>Grupo</th><th>Prod.</th><th>Plaga</th><th>I. Activo</th><th>Dosis</th><th>Moj.</th><th>Total</th><th>Resp.</th></tr></thead><tbody>';
+  html += '<table class="mini-table"><thead><tr><th>Tipo</th><th>Prod.</th><th>Plaga</th><th>I. Activo</th><th>Dosis</th><th>Moj.</th><th>Total</th><th>Temp</th><th>Viento</th><th>Resp.</th></tr></thead><tbody>';
   for (var j = 0; j < prods.length; j++) {
     var p = prods[j];
     html += '<tr>';
@@ -2128,6 +2581,8 @@ function recordCardHtml(reg) {
     html += '<td>' + escaparHtml(p.dosis || '-') + '</td>';
     html += '<td>' + escaparHtml(p.mojamiento || '-') + '</td>';
     html += '<td>' + escaparHtml(p.total || '-') + '</td>';
+    html += '<td>' + escaparHtml(p.temperatura || '-') + '</td>';
+    html += '<td>' + escaparHtml(p.viento || '-') + '</td>';
     html += '<td>' + escaparHtml(p.responsable || '-') + '</td>';
     html += '</tr>';
   }
@@ -2137,10 +2592,16 @@ function recordCardHtml(reg) {
     html += '<div class="comment-row"><strong>Comentarios:</strong> ' + escaparHtml(reg.comentarios) + '</div>';
   }
 
+  var puedeEditar = true;
+  var puedeEliminar = true;
+  if (sesion && !esAdmin()) {
+    puedeEliminar = false;
+    puedeEditar = !reg.user_id || String(reg.user_id) === String(sesion.userId);
+  }
   html += '<div class="record-actions">';
-  html += '<button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); editarRegistro(\'' + rid + '\')">&#x270F; Editar</button>';
+  if (puedeEditar) html += '<button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); editarRegistro(\'' + rid + '\')">&#x270F; Editar</button>';
   html += '<button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); duplicarRegistro(\'' + rid + '\')">&#x2398; Duplicar</button>';
-  html += '<button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); eliminarRegistro(\'' + rid + '\')">&#x1F5D1; Eliminar</button>';
+  if (puedeEliminar) html += '<button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); eliminarRegistro(\'' + rid + '\')">&#x1F5D1; Eliminar</button>';
   html += '</div>';
 
   html += '</div></div>';
@@ -2159,17 +2620,17 @@ window.exportarCSV = function() {
     mostrarToast('No hay registros para exportar');
     return;
   }
-  var lineas = [['Fecha','Hora','Cuartel','Estado Fenologico','Objetivo/Plaga','Grupo','Producto Comercial','Ingrediente Activo','Dosis (cc)/100L','Mojamiento (Lts)','Total Producto Comercial (Lts o Kg)','Responsable','Comentarios']];
+  var lineas = [['Fecha','Hora','Cuartel','Especie','Variedad','Estado Fenologico','Objetivo/Plaga','Tipo de Producto','Producto Comercial','Ingrediente Activo','Dosis (cc)/100L','Mojamiento (Lts/ha)','Total Producto Comercial (Lts o Kg)','Temperatura (\u00b0C)','Viento','Responsable','Comentarios']];
   var registros = data.registros.slice().sort(function(a, b) { return (a.fecha || '') < (b.fecha || '') ? -1 : 1; });
   for (var i = 0; i < registros.length; i++) {
     var reg = registros[i];
     var prods = reg.productos || [];
     if (prods.length === 0) {
-      lineas.push([reg.fecha, reg.hora || '', reg.cuartel, '', '', '', '', '', '', '', '', '', reg.comentarios || '']);
+      lineas.push([reg.fecha, reg.hora || '', reg.cuartel, '', '', '', '', '', '', '', '', '', '', '', '', '', reg.comentarios || '']);
     } else {
       for (var j = 0; j < prods.length; j++) {
         var p = prods[j];
-        lineas.push([reg.fecha, reg.hora || '', reg.cuartel, p.estadoFenologico || '', p.plaga || '', p.grupo || '', p.producto || '', p.ingredienteActivo || '', p.dosis || '', p.mojamiento || '', p.total || '', p.responsable || '', reg.comentarios || '']);
+        lineas.push([reg.fecha, reg.hora || '', reg.cuartel, p.especie || '', p.variedad || '', p.estadoFenologico || '', p.plaga || '', p.grupo || '', p.producto || '', p.ingredienteActivo || '', p.dosis || '', p.mojamiento || '', p.total || '', p.temperatura || '', p.viento || '', p.responsable || '', reg.comentarios || '']);
       }
     }
   }
@@ -2197,61 +2658,29 @@ window.exportarCSV = function() {
 
 /* ==================== RESPONSABLES ==================== */
 window.renderResponsables = function() {
-  var data = cargarDatos();
   var list = document.getElementById('responsablesList');
   if (!list) return;
-  if (data.responsables.length === 0) {
-    list.innerHTML = '<div style="padding:12px 0;color:var(--text-muted);font-size:0.85rem;">No hay responsables registrados.</div>';
-    return;
-  }
   var html = '';
-  for (var i = 0; i < data.responsables.length; i++) {
-    html += '<div class="list-item">';
-    html += '<span class="name">' + escaparHtml(data.responsables[i]) + '</span>';
-    html += '<button class="btn-del" data-nombre="' + escaparAttr(data.responsables[i]) + '">&#x1F5D1; Eliminar</button>';
-    html += '</div>';
+  if (perfilesNube.length) {
+    for (var i = 0; i < perfilesNube.length; i++) {
+      var pf = perfilesNube[i];
+      html += '<div class="list-item">';
+      html += '<span class="name">' + escaparHtml(pf.nombre) + '</span>';
+      html += '<span class="rol-badge">' + (pf.rol === 'admin' ? 'Admin' : 'Responsable') + '</span>';
+      html += '</div>';
+    }
+  } else {
+    var data = cargarDatos();
+    for (var j = 0; j < data.responsables.length; j++) {
+      html += '<div class="list-item"><span class="name">' + escaparHtml(data.responsables[j]) + '</span></div>';
+    }
+    if (!data.responsables.length) {
+      html = '<div style="padding:12px 0;color:var(--text-muted);font-size:0.85rem;">Sin usuarios \u2014 con\u00e9ctate a internet para cargar la lista.</div>';
+    }
   }
   list.innerHTML = html;
-
-  list.querySelectorAll('.btn-del').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      eliminarResponsable(btn.getAttribute('data-nombre'));
-    });
-  });
   poblarDatalistResponsables();
 };
-
-window.agregarResponsable = function() {
-  var input = document.getElementById('nuevoResponsable');
-  var nombre = input.value.trim();
-  if (!nombre) { mostrarAlerta('alertResponsables', 'error', 'Ingrese un nombre.'); return; }
-  var data = cargarDatos();
-  var existe = data.responsables.some(function(n) { return n.toLowerCase() === nombre.toLowerCase(); });
-  if (existe) {
-    mostrarAlerta('alertResponsables', 'error', 'Ese nombre ya existe en la lista.');
-    return;
-  }
-  data.responsables.push(nombre);
-  data.responsables.sort(function(a, b) { return a.toLowerCase().localeCompare(b.toLowerCase()); });
-  guardarDatos(data);
-  input.value = '';
-  renderResponsables();
-  mostrarToast('Responsable agregado');
-};
-
-window.eliminarResponsable = function(nombre) {
-  abrirModal('Eliminar Responsable', '\u00BFEliminar a "' + nombre + '" de la lista? Los registros existentes con este responsable no se modificar\u00E1n.', function() {
-    var data = cargarDatos();
-    data.responsables = data.responsables.filter(function(n) { return n !== nombre; });
-    guardarDatos(data);
-    renderResponsables();
-    mostrarToast('Responsable eliminado');
-  });
-};
-
-document.getElementById('nuevoResponsable').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') agregarResponsable();
-});
 
 /* ==================== MENÃš DE MÃ“DULOS ==================== */
 /* ==================== CUARTELES ==================== */
@@ -2374,7 +2803,7 @@ var menuModulos = [
     { id: 'cerezo-cosecha', titulo: 'Cosecha' }
   ]},
   { id: 'generales', titulo: 'Labores Generales', icono: '\uD83D\uDE9C' },
-  { id: 'mantenedores', titulo: 'Mantenedores', icono: '\u2699\uFE0F' }
+  { id: 'mantenedores', titulo: 'Mantenedores', icono: '\u2699\uFE0F', esModulo: true }
 ];
 
 function construirMenu() {
@@ -2447,6 +2876,7 @@ document.addEventListener('keydown', function(e) {
 
 function irAPagina(pageId, titulo, icono, ruta) {
   cerrarDrawer();
+  if (pageId === 'fitosanitarios') sincronizarNube();
   document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
 
   var hTitle = document.getElementById('headerTitle');
@@ -2467,7 +2897,7 @@ function irAPagina(pageId, titulo, icono, ruta) {
       if (hSub) hSub.textContent = 'Campo \u00b7 Temporada 2026';
     } else {
       if (hTitle) hTitle.textContent = titulo || '';
-      if (hSub) hSub.textContent = pageId === 'fitosanitarios' ? 'Registro de aplicaciones' : (pageId === 'cuarteles' ? 'Campo Aguirrana \u00b7 Detalle por cuartel' : '');
+      if (hSub) hSub.textContent = pageId === 'fitosanitarios' ? 'Registro de aplicaciones' : (pageId === 'cuarteles' ? 'Campo Aguirrana \u00b7 Detalle por cuartel' : (pageId === 'mantenedores' ? 'Responsables y datos base' : ''));
     }
   }
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2623,7 +3053,6 @@ window.iniciarBienvenida = function() {
 
 /* ==================== INIT ==================== */
 construirMapaIngredientes();
-poblarDatalistGrupos();
 poblarDatalistResponsables();
 filtrarProductosPorGrupo(null);
 renderResponsables();
@@ -2633,6 +3062,26 @@ poblarFiltroCuarteles();
 renderSelectorCuarteles();
 construirMenu();
 iniciarBienvenida();
+
+/* ==================== SESION / ARRANQUE ==================== */
+cargarSesion();
+if (sesion) {
+  entrarApp();
+  sincronizarNube();
+} else {
+  mostrarLogin();
+}
+
+window.addEventListener('online', function() {
+  if (sesion) sincronizarNube();
+});
+
+document.getElementById('loginEmail').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') hacerLogin();
+});
+document.getElementById('loginPass').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') hacerLogin();
+});
 
 })();
 </script>
