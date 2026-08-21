@@ -777,6 +777,90 @@ input[data-autofilled="true"] { background: var(--fern-wash) !important; border-
 .cc-bar { height: 6px; background: var(--border-light); border-radius: var(--r-pill); overflow: hidden; }
 .cc-bar > div { height: 100%; background: var(--acc); border-radius: var(--r-pill); }
 
+/* ---------- FITO: SELECTOR / DETALLE / FORM ---------- */
+.hint-text { font-size: 0.8rem; color: var(--text-muted); text-align: center; padding: 6px 0 14px; }
+.sel-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding-bottom: 16px; }
+@media (min-width: 540px) { .sel-grid { grid-template-columns: repeat(3, 1fr); } }
+.cuartel-tile {
+  --acc: var(--fern);
+  --acc-pale: var(--fern-pale);
+  background: var(--white);
+  border: 1px solid var(--border-light);
+  border-top: 3px solid var(--acc);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-sm);
+  padding: 14px 10px 12px;
+  text-align: center;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s var(--ease);
+}
+.cuartel-tile:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+.cuartel-tile:active { transform: scale(0.97); }
+.cuartel-tile.esp-uva { --acc: #7a5c90; --acc-pale: #f1eaf6; }
+.cuartel-tile.esp-cereza { --acc: var(--terracotta); --acc-pale: var(--terracotta-light); }
+.cuartel-tile.esp-vacio { --acc: var(--text-muted); --acc-pale: var(--border-light); }
+.ct-icon { font-size: 1.5rem; line-height: 1; }
+.ct-num { font-weight: 700; font-size: 0.92rem; color: var(--text); margin-top: 6px; }
+.ct-var { font-size: 0.66rem; color: var(--text-muted); margin-top: 2px; min-height: 1.6em; }
+.ct-count {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.62rem;
+  font-weight: 700;
+  margin-top: 8px;
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+  background: var(--acc-pale);
+  color: var(--acc);
+}
+.detalle-head {
+  --acc: var(--fern);
+  background: var(--white);
+  border-radius: var(--r-md);
+  border: 1px solid var(--border-light);
+  border-left: 4px solid var(--acc);
+  box-shadow: var(--shadow);
+  padding: 14px;
+  margin-bottom: 12px;
+}
+.detalle-head.esp-uva { --acc: #7a5c90; }
+.detalle-head.esp-cereza { --acc: var(--terracotta); }
+.detalle-head.esp-vacio { --acc: var(--text-muted); }
+.dh-top { display: flex; align-items: center; gap: 10px; }
+.dh-back {
+  background: var(--fern-wash);
+  border: none;
+  color: var(--fern-dark);
+  width: 34px;
+  height: 34px;
+  border-radius: var(--r-sm);
+  font-size: 1.05rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.dh-icon { font-size: 1.6rem; line-height: 1; }
+.dh-name { font-weight: 700; font-size: 1.05rem; color: var(--text); }
+.dh-sub { font-size: 0.72rem; color: var(--text-secondary); margin-top: 1px; }
+.dh-stats { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-light); font-size: 0.74rem; color: var(--text-secondary); }
+.dh-stats b { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text); }
+.form-cuartel-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--fern-wash);
+  border: 1px solid var(--fern-pale);
+  border-radius: var(--r-sm);
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+.fcb-icon { font-size: 1.3rem; }
+.fcb-name { font-weight: 700; font-size: 0.9rem; color: var(--fern-dark); }
+.fcb-sub { font-size: 0.68rem; color: var(--text-secondary); }
+.fcb-cambiar { margin-left: auto; }
+
 /* ---------- WELCOME ---------- */
 .welcome-hero {
   position: relative;
@@ -1052,8 +1136,8 @@ input[data-autofilled="true"] { background: var(--fern-wash) !important; border-
 <div class="page" id="page-fitosanitarios">
 
 <nav class="tab-nav">
-  <button class="tab-btn active" data-tab="registro">
-    <span class="tab-icon">&#x1F4DD;</span> Nuevo Registro
+  <button class="tab-btn active" data-tab="cuarteles">
+    <span class="tab-icon">&#x1F5FA;&#xFE0F;</span> Cuarteles
   </button>
   <button class="tab-btn" data-tab="historial">
     <span class="tab-icon">&#x1F4CB;</span> Historial
@@ -1065,69 +1149,87 @@ input[data-autofilled="true"] { background: var(--fern-wash) !important; border-
 
 <main class="main-content">
 
-  <!-- TAB: NUEVO REGISTRO -->
-  <section class="tab-panel active" id="tab-registro">
-    <div class="cancel-edit-bar" id="cancelEditBar">
-      <span>Editando registro existente</span>
-      <button class="btn btn-sm btn-ghost" onclick="cancelarEdicion()">Cancelar edici&oacute;n</button>
+  <!-- TAB: CUARTELES (selector / detalle / formulario) -->
+  <section class="tab-panel active" id="tab-cuarteles">
+
+    <!-- VISTA: SELECTOR DE CUARTELES -->
+    <div id="viewSelector">
+      <div class="hint-text">Selecciona un cuartel para ver su historial o ingresar una aplicaci&oacute;n</div>
+      <div class="sel-grid" id="selGrid"></div>
     </div>
 
-    <div class="card">
-      <div class="card-title">&#x1F4C5; Datos del Registro</div>
-      <div class="form-row">
-        <div class="form-group">
-          <label for="fecha">Fecha</label>
-          <input type="date" id="fecha">
+    <!-- VISTA: DETALLE DEL CUARTEL -->
+    <div id="viewCuartelDetalle" class="is-hidden">
+      <div class="detalle-head" id="detalleHead"></div>
+      <button class="btn btn-primary" onclick="iniciarNuevoRegistro()">&#x2795; Nueva Aplicaci&oacute;n</button>
+      <div id="historialCuartel" style="margin-top:12px"></div>
+    </div>
+
+    <!-- VISTA: FORMULARIO DE INGRESO -->
+    <div id="viewFormulario" class="is-hidden">
+      <div class="cancel-edit-bar" id="cancelEditBar">
+        <span>Editando registro existente</span>
+        <button class="btn btn-sm btn-ghost" onclick="volverADetalle()">Cancelar edici&oacute;n</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">&#x1F4C5; Datos del Registro</div>
+        <div class="form-cuartel-banner" id="formCuartelBanner"></div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="fecha">Fecha</label>
+            <input type="date" id="fecha">
+          </div>
+          <div class="form-group">
+            <label for="hora">Hora</label>
+            <input type="time" id="hora">
+          </div>
         </div>
+      </div>
+
+      <div class="card" id="productosCard">
+        <div class="card-title">&#x1F9EA; Productos Aplicados</div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Estado Fenol&oacute;gico</th>
+                <th>Objetivo / Plaga</th>
+                <th>Grupo</th>
+                <th>Producto Comercial</th>
+                <th>Ingrediente Activo</th>
+                <th>Dosis (cc) / 100 L</th>
+                <th>Mojamiento (Lts)</th>
+                <th>Total Producto Comercial (Lts o Kg)</th>
+                <th>Responsable</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="productosTableBody"></tbody>
+          </table>
+        </div>
+        <button class="btn btn-add" onclick="agregarFilaProducto()">+ Agregar Producto</button>
+      </div>
+
+      <datalist id="productosSAG"></datalist>
+      <datalist id="gruposList"></datalist>
+      <datalist id="responsablesDatalist"></datalist>
+
+      <div class="card" id="comentariosCard">
         <div class="form-group">
-          <label for="cuartel">Cuartel</label>
-          <select id="cuartel">
-            <option value="">-- Seleccionar --</option>
-          </select>
+          <label for="comentarios">&#x1F4AC; Comentarios</label>
+          <textarea id="comentarios" placeholder="Notas u observaciones del registro..."></textarea>
         </div>
       </div>
+
+      <div id="alertRegistro" class="alert"></div>
+
+      <button class="btn btn-primary" id="btnGuardar" onclick="guardarRegistro()">
+        &#x1F4BE; Guardar Registro
+      </button>
+      <div style="height:10px"></div>
+      <button class="btn btn-outline" style="width:100%" onclick="volverADetalle()">&#x2039; Volver al cuartel</button>
     </div>
-
-    <div class="card is-hidden" id="productosCard">
-      <div class="card-title">&#x1F9EA; Productos Aplicados</div>
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>Estado Fenol&oacute;gico</th>
-              <th>Objetivo / Plaga</th>
-              <th>Grupo</th>
-              <th>Producto Comercial</th>
-              <th>Ingrediente Activo</th>
-              <th>Dosis (cc) / 100 L</th>
-              <th>Mojamiento (Lts)</th>
-              <th>Total Producto Comercial (Lts o Kg)</th>
-              <th>Responsable</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="productosTableBody"></tbody>
-        </table>
-      </div>
-      <button class="btn btn-add" onclick="agregarFilaProducto()">+ Agregar Producto</button>
-    </div>
-
-    <datalist id="productosSAG"></datalist>
-    <datalist id="gruposList"></datalist>
-    <datalist id="responsablesDatalist"></datalist>
-
-    <div class="card is-hidden" id="comentariosCard">
-      <div class="form-group">
-        <label for="comentarios">&#x1F4AC; Comentarios</label>
-        <textarea id="comentarios" placeholder="Notas u observaciones del registro..."></textarea>
-      </div>
-    </div>
-
-    <div id="alertRegistro" class="alert"></div>
-
-    <button class="btn btn-primary is-hidden" id="btnGuardar" onclick="guardarRegistro()">
-      &#x1F4BE; Guardar Registro
-    </button>
   </section>
 
   <!-- TAB: HISTORIAL -->
@@ -1514,6 +1616,7 @@ document.querySelectorAll('.tab-btn').forEach(function(btn) {
     btn.classList.add('active');
     document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
     if (btn.dataset.tab === 'historial') renderHistorial();
+    if (btn.dataset.tab === 'cuarteles') renderSelectorCuarteles();
   });
 });
 
@@ -1524,34 +1627,140 @@ function cambiarTab(tab) {
   document.getElementById('tab-' + tab).classList.add('active');
 }
 
-/* ==================== CUARTEL ==================== */
-var selCuartel = document.getElementById('cuartel');
-for (var i = 1; i <= 12; i++) {
-  var opt = document.createElement('option');
-  opt.value = String(i);
-  opt.textContent = 'Cuartel ' + i;
-  selCuartel.appendChild(opt);
+/* ==================== NAVEGACION FITO ==================== */
+var cuartelActivo = null;
+
+function horaAhora() {
+  var d = new Date();
+  return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
 }
 
 document.getElementById('fecha').value = fechaHoy();
+document.getElementById('hora').value = horaAhora();
 
-selCuartel.addEventListener('change', function() {
-  var visible = this.value !== '';
-  document.getElementById('productosCard').classList.toggle('is-hidden', !visible);
-  document.getElementById('comentariosCard').classList.toggle('is-hidden', !visible);
-  document.getElementById('btnGuardar').classList.toggle('is-hidden', !visible);
-  if (visible && document.getElementById('productosTableBody').children.length === 0) {
-    agregarFilaProducto();
+function mostrarVistaFito(vista) {
+  document.getElementById('viewSelector').classList.toggle('is-hidden', vista !== 'selector');
+  document.getElementById('viewCuartelDetalle').classList.toggle('is-hidden', vista !== 'detalle');
+  document.getElementById('viewFormulario').classList.toggle('is-hidden', vista !== 'form');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function buscarCuartel(n) {
+  for (var i = 0; i < cuartelesData.length; i++) {
+    if (String(cuartelesData[i].n) === String(n)) return cuartelesData[i];
   }
-});
+  return { n: n, especie: '', variedad: null };
+}
+
+function actualizarBannerFormulario() {
+  var q = buscarCuartel(cuartelActivo);
+  var est = especieEstilo[q.especie] || especieEstilo['Sin plantaci\u00f3n'];
+  document.getElementById('formCuartelBanner').innerHTML =
+    '<span class="fcb-icon">' + est.icono + '</span>' +
+    '<div><div class="fcb-name">Cuartel ' + q.n + '</div>' +
+    '<div class="fcb-sub">' + escaparHtml(q.especie) + (q.variedad ? ' \u00b7 ' + escaparHtml(q.variedad) : '') + '</div></div>' +
+    '<button type="button" class="btn btn-sm btn-ghost fcb-cambiar" onclick="volverADetalle()">Cambiar</button>';
+}
+
+window.renderSelectorCuarteles = function() {
+  var grid = document.getElementById('selGrid');
+  if (!grid) return;
+  var data = cargarDatos();
+  var conteos = {};
+  for (var i = 0; i < data.registros.length; i++) {
+    var c = data.registros[i].cuartel;
+    conteos[c] = (conteos[c] || 0) + 1;
+  }
+  var html = '';
+  for (var j = 0; j < cuartelesData.length; j++) {
+    var q = cuartelesData[j];
+    var est = especieEstilo[q.especie] || especieEstilo['Sin plantaci\u00f3n'];
+    var nReg = conteos[q.n] || 0;
+    html += '<button class="cuartel-tile ' + est.clase + '" onclick="abrirCuartel(' + q.n + ')">';
+    html += '<div class="ct-icon">' + est.icono + '</div>';
+    html += '<div class="ct-num">Cuartel ' + q.n + '</div>';
+    html += '<div class="ct-var">' + escaparHtml(q.variedad || 'Sin plantaci\u00f3n') + '</div>';
+    html += '<span class="ct-count">' + nReg + ' aplicacion' + (nReg !== 1 ? 'es' : '') + '</span>';
+    html += '</button>';
+  }
+  grid.innerHTML = html;
+};
+
+window.abrirCuartel = function(n) {
+  cuartelActivo = n;
+  var q = buscarCuartel(n);
+  var est = especieEstilo[q.especie] || especieEstilo['Sin plantaci\u00f3n'];
+  var head = document.getElementById('detalleHead');
+  head.className = 'detalle-head ' + est.clase;
+  var html = '<div class="dh-top">';
+  html += '<button class="dh-back" onclick="volverASelector()" title="Volver">&#x2039;</button>';
+  html += '<span class="dh-icon">' + est.icono + '</span>';
+  html += '<div><div class="dh-name">Cuartel ' + q.n + '</div>';
+  html += '<div class="dh-sub">' + escaparHtml(q.especie) + (q.variedad ? ' \u00b7 ' + escaparHtml(q.variedad) : '') + '</div></div>';
+  html += '</div>';
+  if (q.superficie) {
+    html += '<div class="dh-stats">';
+    html += '<span>Superficie <b>' + fmtCL(q.superficie, 1) + ' ha</b></span>';
+    if (q.ano) html += '<span>A\u00f1o <b>' + q.ano + '</b></span>';
+    if (q.marco) html += '<span>Marco <b>' + escaparHtml(q.marco) + '</b></span>';
+    if (q.plantas != null) html += '<span>Plantas <b>' + fmtCL(q.plantas) + '</b></span>';
+    html += '</div>';
+  }
+  head.innerHTML = html;
+  renderHistorialCuartel();
+  mostrarVistaFito('detalle');
+};
+
+window.volverASelector = function() {
+  cancelarEdicion();
+  renderSelectorCuarteles();
+  mostrarVistaFito('selector');
+};
+
+window.iniciarNuevoRegistro = function() {
+  limpiarFormulario();
+  if (document.getElementById('productosTableBody').children.length === 0) agregarFilaProducto();
+  mostrarVistaFito('form');
+};
+
+window.volverADetalle = function() {
+  cancelarEdicion();
+  abrirCuartel(cuartelActivo);
+};
+
+function renderHistorialCuartel() {
+  var cont = document.getElementById('historialCuartel');
+  if (!cont) return;
+  var data = cargarDatos();
+  var registros = [];
+  for (var i = 0; i < data.registros.length; i++) {
+    if (String(data.registros[i].cuartel) === String(cuartelActivo)) registros.push(data.registros[i]);
+  }
+  registros.sort(function(a, b) {
+    var fa = (a.fecha || '') + (a.hora || '');
+    var fb = (b.fecha || '') + (b.hora || '');
+    if (fa !== fb) return fa < fb ? 1 : -1;
+    return String(b.id) < String(a.id) ? -1 : 1;
+  });
+
+  if (registros.length === 0) {
+    cont.innerHTML = '<div class="empty-state"><div class="empty-icon">&#x1F4ED;</div><p>Este cuartel no tiene aplicaciones registradas</p></div>';
+    return;
+  }
+  var html = '<div class="hint-text" style="text-align:left;padding:10px 2px 8px;">Historial \u00b7 ' + registros.length + ' aplicacion' + (registros.length !== 1 ? 'es' : '') + '</div>';
+  for (var j = 0; j < registros.length; j++) html += recordCardHtml(registros[j]);
+  cont.innerHTML = html;
+}
 
 /* ==================== FILTROS ==================== */
-var filtroCuartel = document.getElementById('filtroCuartel');
-for (var j = 1; j <= 12; j++) {
-  var o = document.createElement('option');
-  o.value = String(j);
-  o.textContent = 'Cuartel ' + j;
-  filtroCuartel.appendChild(o);
+function poblarFiltroCuarteles() {
+  var filtroCuartel = document.getElementById('filtroCuartel');
+  for (var j = 0; j < cuartelesData.length; j++) {
+    var o = document.createElement('option');
+    o.value = String(cuartelesData[j].n);
+    o.textContent = 'Cuartel ' + cuartelesData[j].n;
+    filtroCuartel.appendChild(o);
+  }
 }
 
 window.limpiarFiltros = function() {
@@ -1658,7 +1867,8 @@ window.agregarFilaProducto = function(datos) {
 /* ==================== GUARDAR ==================== */
 window.guardarRegistro = function() {
   var fecha = document.getElementById('fecha').value;
-  var cuartel = document.getElementById('cuartel').value;
+  var hora = document.getElementById('hora').value;
+  var cuartel = cuartelActivo;
   var comentarios = document.getElementById('comentarios').value.trim();
   var filas = document.getElementById('productosTableBody').children;
   var productos = [];
@@ -1690,6 +1900,7 @@ window.guardarRegistro = function() {
     for (var k = 0; k < data.registros.length; k++) {
       if (String(data.registros[k].id) === String(editandoId)) {
         data.registros[k].fecha = fecha;
+        data.registros[k].hora = hora;
         data.registros[k].cuartel = cuartel;
         data.registros[k].productos = productos;
         data.registros[k].comentarios = comentarios;
@@ -1699,12 +1910,15 @@ window.guardarRegistro = function() {
     if (guardarDatos(data)) {
       mostrarToast('Registro actualizado');
       cancelarEdicion();
-      cambiarTab('historial');
+      abrirCuartel(cuartelActivo);
+      renderHistorial();
+      renderSelectorCuarteles();
     }
   } else {
     data.registros.push({
       id: generarId(),
       fecha: fecha,
+      hora: hora,
       cuartel: cuartel,
       productos: productos,
       comentarios: comentarios
@@ -1712,6 +1926,9 @@ window.guardarRegistro = function() {
     if (guardarDatos(data)) {
       mostrarToast('Registro guardado');
       limpiarFormulario();
+      abrirCuartel(cuartelActivo);
+      renderHistorial();
+      renderSelectorCuarteles();
     }
   }
 };
@@ -1726,14 +1943,11 @@ window.cancelarEdicion = function() {
 
 function limpiarFormulario() {
   document.getElementById('fecha').value = fechaHoy();
-  document.getElementById('cuartel').value = '';
+  document.getElementById('hora').value = horaAhora();
   document.getElementById('comentarios').value = '';
   document.getElementById('productosTableBody').innerHTML = '';
-  document.getElementById('productosCard').classList.add('is-hidden');
-  document.getElementById('comentariosCard').classList.add('is-hidden');
-  document.getElementById('btnGuardar').classList.add('is-hidden');
   document.getElementById('alertRegistro').classList.remove('visible');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  actualizarBannerFormulario();
 }
 
 /* ==================== EDITAR / ELIMINAR / DUPLICAR ==================== */
@@ -1751,25 +1965,24 @@ window.editarRegistro = function(id) {
   var reg = found.reg;
 
   editandoId = reg.id;
+  cuartelActivo = reg.cuartel;
   document.getElementById('fecha').value = reg.fecha;
-  document.getElementById('cuartel').value = reg.cuartel;
+  document.getElementById('hora').value = reg.hora || horaAhora();
   document.getElementById('comentarios').value = reg.comentarios || '';
   document.getElementById('productosTableBody').innerHTML = '';
 
-  document.getElementById('productosCard').classList.remove('is-hidden');
-  document.getElementById('comentariosCard').classList.remove('is-hidden');
-  document.getElementById('btnGuardar').classList.remove('is-hidden');
-  document.getElementById('btnGuardar').textContent = '\u2705 Actualizar Registro';
+  document.getElementById('btnGuardar').textContent = '✅ Actualizar Registro';
   document.getElementById('cancelEditBar').classList.add('visible');
+  actualizarBannerFormulario();
 
   for (var j = 0; j < reg.productos.length; j++) {
     agregarFilaProducto(reg.productos[j]);
   }
   if (reg.productos.length === 0) agregarFilaProducto();
 
-  cambiarTab('registro');
+  cambiarTab('cuarteles');
+  mostrarVistaFito('form');
   document.getElementById('alertRegistro').classList.remove('visible');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 window.duplicarRegistro = function(id) {
@@ -1778,26 +1991,25 @@ window.duplicarRegistro = function(id) {
   var reg = JSON.parse(JSON.stringify(found.reg));
   reg.id = null;
 
+  cuartelActivo = reg.cuartel;
   document.getElementById('fecha').value = fechaHoy();
-  document.getElementById('cuartel').value = reg.cuartel;
+  document.getElementById('hora').value = horaAhora();
   document.getElementById('comentarios').value = reg.comentarios || '';
   document.getElementById('productosTableBody').innerHTML = '';
 
-  document.getElementById('productosCard').classList.remove('is-hidden');
-  document.getElementById('comentariosCard').classList.remove('is-hidden');
-  document.getElementById('btnGuardar').classList.remove('is-hidden');
   document.getElementById('btnGuardar').textContent = '\uD83D\uDCBE Guardar Registro';
   document.getElementById('cancelEditBar').classList.remove('visible');
   editandoId = null;
+  actualizarBannerFormulario();
 
   for (var j = 0; j < reg.productos.length; j++) {
     agregarFilaProducto(reg.productos[j]);
   }
   if (reg.productos.length === 0) agregarFilaProducto();
 
-  cambiarTab('registro');
-  mostrarToast('Registro duplicado â€” revise y guarde');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  cambiarTab('cuarteles');
+  mostrarVistaFito('form');
+  mostrarToast('Registro duplicado \u2014 revise y guarde');
 };
 
 window.eliminarRegistro = function(id) {
@@ -1808,6 +2020,8 @@ window.eliminarRegistro = function(id) {
     mostrarToast('Registro eliminado');
     if (String(editandoId) === String(id)) cancelarEdicion();
     renderHistorial();
+    renderHistorialCuartel();
+    renderSelectorCuarteles();
   });
 };
 
@@ -1880,53 +2094,58 @@ window.renderHistorial = function() {
 
   var html = '';
   for (var i = 0; i < registros.length; i++) {
-    var reg = registros[i];
-    var fechaFormateada = String(reg.fecha || '').split('-').reverse().join('/');
-    var prods = reg.productos || [];
-    var nProd = prods.length;
-    var rid = escaparAttr(reg.id);
-
-    html += '<div class="record-card">';
-    html += '<div class="record-header" onclick="toggleRecordBody(this)">';
-    html += '<div class="record-info">';
-    html += '<div class="record-date">' + fechaFormateada + '</div>';
-    html += '<div class="record-meta">Cuartel ' + escaparHtml(reg.cuartel) + ' &middot; ' + nProd + ' producto' + (nProd !== 1 ? 's' : '') + '</div>';
-    html += '</div>';
-    html += '<span class="record-badge badge-green">' + nProd + '</span>';
-    html += '</div>';
-
-    html += '<div class="record-body">';
-    html += '<table class="mini-table"><thead><tr><th>Grupo</th><th>Prod.</th><th>Plaga</th><th>I. Activo</th><th>Dosis</th><th>Moj.</th><th>Total</th><th>Resp.</th></tr></thead><tbody>';
-    for (var j = 0; j < prods.length; j++) {
-      var p = prods[j];
-      html += '<tr>';
-      html += '<td>' + escaparHtml(p.grupo || '-') + '</td>';
-      html += '<td>' + escaparHtml(p.producto || '-') + '</td>';
-      html += '<td>' + escaparHtml(p.plaga || '-') + '</td>';
-      html += '<td>' + escaparHtml(p.ingredienteActivo || '-') + '</td>';
-      html += '<td>' + escaparHtml(p.dosis || '-') + '</td>';
-      html += '<td>' + escaparHtml(p.mojamiento || '-') + '</td>';
-      html += '<td>' + escaparHtml(p.total || '-') + '</td>';
-      html += '<td>' + escaparHtml(p.responsable || '-') + '</td>';
-      html += '</tr>';
-    }
-    html += '</tbody></table>';
-
-    if (reg.comentarios) {
-      html += '<div class="comment-row"><strong>Comentarios:</strong> ' + escaparHtml(reg.comentarios) + '</div>';
-    }
-
-    html += '<div class="record-actions">';
-    html += '<button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); editarRegistro(\'' + rid + '\')">&#x270F; Editar</button>';
-    html += '<button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); duplicarRegistro(\'' + rid + '\')">&#x2398; Duplicar</button>';
-    html += '<button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); eliminarRegistro(\'' + rid + '\')">&#x1F5D1; Eliminar</button>';
-    html += '</div>';
-
-    html += '</div></div>';
+    html += recordCardHtml(registros[i]);
   }
 
   container.innerHTML = html;
 };
+
+function recordCardHtml(reg) {
+  var fechaFormateada = String(reg.fecha || '').split('-').reverse().join('/');
+  if (reg.hora) fechaFormateada += ' \u00b7 ' + reg.hora;
+  var prods = reg.productos || [];
+  var nProd = prods.length;
+  var rid = escaparAttr(reg.id);
+
+  var html = '<div class="record-card">';
+  html += '<div class="record-header" onclick="toggleRecordBody(this)">';
+  html += '<div class="record-info">';
+  html += '<div class="record-date">' + fechaFormateada + '</div>';
+  html += '<div class="record-meta">Cuartel ' + escaparHtml(reg.cuartel) + ' &middot; ' + nProd + ' producto' + (nProd !== 1 ? 's' : '') + '</div>';
+  html += '</div>';
+  html += '<span class="record-badge badge-green">' + nProd + '</span>';
+  html += '</div>';
+
+  html += '<div class="record-body">';
+  html += '<table class="mini-table"><thead><tr><th>Grupo</th><th>Prod.</th><th>Plaga</th><th>I. Activo</th><th>Dosis</th><th>Moj.</th><th>Total</th><th>Resp.</th></tr></thead><tbody>';
+  for (var j = 0; j < prods.length; j++) {
+    var p = prods[j];
+    html += '<tr>';
+    html += '<td>' + escaparHtml(p.grupo || '-') + '</td>';
+    html += '<td>' + escaparHtml(p.producto || '-') + '</td>';
+    html += '<td>' + escaparHtml(p.plaga || '-') + '</td>';
+    html += '<td>' + escaparHtml(p.ingredienteActivo || '-') + '</td>';
+    html += '<td>' + escaparHtml(p.dosis || '-') + '</td>';
+    html += '<td>' + escaparHtml(p.mojamiento || '-') + '</td>';
+    html += '<td>' + escaparHtml(p.total || '-') + '</td>';
+    html += '<td>' + escaparHtml(p.responsable || '-') + '</td>';
+    html += '</tr>';
+  }
+  html += '</tbody></table>';
+
+  if (reg.comentarios) {
+    html += '<div class="comment-row"><strong>Comentarios:</strong> ' + escaparHtml(reg.comentarios) + '</div>';
+  }
+
+  html += '<div class="record-actions">';
+  html += '<button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); editarRegistro(\'' + rid + '\')">&#x270F; Editar</button>';
+  html += '<button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); duplicarRegistro(\'' + rid + '\')">&#x2398; Duplicar</button>';
+  html += '<button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); eliminarRegistro(\'' + rid + '\')">&#x1F5D1; Eliminar</button>';
+  html += '</div>';
+
+  html += '</div></div>';
+  return html;
+}
 
 window.toggleRecordBody = function(header) {
   var body = header.nextElementSibling;
@@ -1940,17 +2159,17 @@ window.exportarCSV = function() {
     mostrarToast('No hay registros para exportar');
     return;
   }
-  var lineas = [['Fecha','Cuartel','Estado Fenologico','Objetivo/Plaga','Grupo','Producto Comercial','Ingrediente Activo','Dosis (cc)/100L','Mojamiento (Lts)','Total Producto Comercial (Lts o Kg)','Responsable','Comentarios']];
+  var lineas = [['Fecha','Hora','Cuartel','Estado Fenologico','Objetivo/Plaga','Grupo','Producto Comercial','Ingrediente Activo','Dosis (cc)/100L','Mojamiento (Lts)','Total Producto Comercial (Lts o Kg)','Responsable','Comentarios']];
   var registros = data.registros.slice().sort(function(a, b) { return (a.fecha || '') < (b.fecha || '') ? -1 : 1; });
   for (var i = 0; i < registros.length; i++) {
     var reg = registros[i];
     var prods = reg.productos || [];
     if (prods.length === 0) {
-      lineas.push([reg.fecha, reg.cuartel, '', '', '', '', '', '', '', '', '', reg.comentarios || '']);
+      lineas.push([reg.fecha, reg.hora || '', reg.cuartel, '', '', '', '', '', '', '', '', '', reg.comentarios || '']);
     } else {
       for (var j = 0; j < prods.length; j++) {
         var p = prods[j];
-        lineas.push([reg.fecha, reg.cuartel, p.estadoFenologico || '', p.plaga || '', p.grupo || '', p.producto || '', p.ingredienteActivo || '', p.dosis || '', p.mojamiento || '', p.total || '', p.responsable || '', reg.comentarios || '']);
+        lineas.push([reg.fecha, reg.hora || '', reg.cuartel, p.estadoFenologico || '', p.plaga || '', p.grupo || '', p.producto || '', p.ingredienteActivo || '', p.dosis || '', p.mojamiento || '', p.total || '', p.responsable || '', reg.comentarios || '']);
       }
     }
   }
@@ -2410,6 +2629,8 @@ filtrarProductosPorGrupo(null);
 renderResponsables();
 renderHistorial();
 renderCuarteles();
+poblarFiltroCuarteles();
+renderSelectorCuarteles();
 construirMenu();
 iniciarBienvenida();
 
