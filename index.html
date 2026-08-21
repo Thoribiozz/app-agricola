@@ -397,14 +397,20 @@ body {
 
 /* ---------- HISTORY CARDS ---------- */
 .record-card {
+  --acc: var(--fern);
+  --acc-pale: var(--fern-pale);
   background: var(--white);
   border-radius: var(--r-md);
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--border-light);
+  border-top: 3px solid var(--acc);
   margin-bottom: 10px;
   overflow: hidden;
   transition: box-shadow 0.25s var(--ease), transform 0.25s var(--ease), border-color 0.25s var(--ease);
 }
+.record-card.esp-uva { --acc: #7a5c90; --acc-pale: #f1eaf6; }
+.record-card.esp-cereza { --acc: var(--terracotta); --acc-pale: var(--terracotta-light); }
+.record-card.esp-vacio { --acc: var(--text-muted); --acc-pale: var(--border-light); }
 .record-card:hover {
   box-shadow: var(--shadow-lg);
   border-color: var(--fern-pale);
@@ -418,8 +424,11 @@ body {
   justify-content: space-between;
   cursor: pointer;
   gap: 8px;
-  border-left: 4px solid var(--fern);
 }
+.rec-icon { font-size: 1.3rem; line-height: 1; flex-shrink: 0; }
+.historial-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+@media (min-width: 540px) { .historial-grid { grid-template-columns: 1fr 1fr; } }
+.historial-grid .record-card { margin-bottom: 0; }
 .record-info { flex: 1; min-width: 0; }
 .record-date { font-weight: 700; font-size: 0.9rem; color: var(--text); }
 .record-meta { font-size: 0.72rem; color: var(--text-secondary); margin-top: 2px; }
@@ -427,10 +436,11 @@ body {
   font-size: 0.64rem;
   font-weight: 700;
   padding: 4px 10px;
-  border-radius: var(--r-md);
+  border-radius: var(--r-pill);
   white-space: nowrap;
+  background: var(--acc-pale);
+  color: var(--acc);
 }
-.badge-green { background: var(--fern-pale); color: var(--fern-dark); }
 .record-body { display: none; padding: 0 14px 14px; border-top: 1px solid var(--border-light); }
 .record-body.open { display: block; }
 
@@ -947,6 +957,27 @@ input[data-autofilled="true"] { background: var(--fern-wash) !important; border-
   letter-spacing: 0.5px;
 }
 
+/* ---------- DASHBOARD / DESCARGAS ---------- */
+.sec-title { font-size: 0.85rem; font-weight: 700; color: var(--fern-dark); margin: 16px 0 10px; }
+.bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 0.78rem; }
+.bar-row .bl { width: 104px; flex-shrink: 0; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar-row .bt { flex: 1; display: block; background: var(--fern-wash); border-radius: var(--r-pill); height: 16px; overflow: hidden; }
+.bar-row .bf { display: block; height: 100%; background: var(--fern); border-radius: var(--r-pill); }
+.bar-row .bv { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 700; font-size: 0.75rem; width: 42px; text-align: right; color: var(--text); }
+.mod-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+@media (min-width: 540px) { .mod-grid { grid-template-columns: repeat(3, 1fr); } }
+.mod-card { background: var(--white); border: 1px solid var(--border-light); border-radius: var(--r-md); box-shadow: var(--shadow-sm); padding: 12px; }
+.mod-card .mi { font-size: 1.4rem; line-height: 1; }
+.mod-card .mt { font-size: 0.74rem; font-weight: 700; margin-top: 6px; color: var(--text); }
+.mod-card .mv { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 1.3rem; font-weight: 700; color: var(--fern); margin-top: 4px; }
+.mod-card .ms { font-size: 0.6rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; margin-top: 2px; }
+.dl-card { background: var(--white); border: 1px solid var(--border-light); border-radius: var(--r-md); box-shadow: var(--shadow-sm); padding: 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; }
+.dl-card.off { opacity: 0.55; }
+.dl-icon { font-size: 1.6rem; line-height: 1; }
+.dl-info { flex: 1; min-width: 0; }
+.dl-title { font-weight: 700; font-size: 0.9rem; color: var(--text); }
+.dl-meta { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+
 /* ---------- WELCOME ---------- */
 .welcome-hero {
   position: relative;
@@ -1219,6 +1250,18 @@ input[data-autofilled="true"] { background: var(--fern-wash) !important; border-
   </div>
 </div>
 
+<!-- PAGE: DASHBOARD -->
+<div class="page" id="page-dashboard">
+  <div class="cuarteles-wrap">
+    <div class="cuarteles-hero">
+      <div class="ch-title">&#x1F4CA; Dashboard</div>
+      <div class="ch-sub">Rendimiento seg&uacute;n registros &middot; Campo Aguirrana</div>
+      <div class="ch-stats" id="dashStats"></div>
+    </div>
+    <div id="dashContenido"></div>
+  </div>
+</div>
+
 <!-- PAGE: CUARTELES -->
 <div class="page" id="page-cuarteles">
   <div class="cuarteles-wrap">
@@ -1360,6 +1403,11 @@ input[data-autofilled="true"] { background: var(--fern-wash) !important; border-
 
 </div>
 <!-- FIN PAGE: FITOSANITARIOS -->
+
+<!-- PAGE: DESCARGAS -->
+<div class="page" id="page-descargas">
+  <div class="cuarteles-wrap" id="descargasWrap"></div>
+</div>
 
 <!-- PAGE: MANTENEDORES -->
 <div class="page" id="page-mantenedores">
@@ -2138,7 +2186,9 @@ function renderHistorialCuartel() {
     return;
   }
   var html = '<div class="hint-text" style="text-align:left;padding:10px 2px 8px;">Historial \u00b7 ' + registros.length + ' aplicacion' + (registros.length !== 1 ? 'es' : '') + '</div>';
+  html += '<div class="historial-grid">';
   for (var j = 0; j < registros.length; j++) html += recordCardHtml(registros[j]);
+  html += '</div>';
   cont.innerHTML = html;
 }
 
@@ -2550,7 +2600,7 @@ window.renderHistorial = function() {
     html += recordCardHtml(registros[i]);
   }
 
-  container.innerHTML = html;
+  container.innerHTML = '<div class="historial-grid">' + html + '</div>';
 };
 
 function recordCardHtml(reg) {
@@ -2559,14 +2609,18 @@ function recordCardHtml(reg) {
   var prods = reg.productos || [];
   var nProd = prods.length;
   var rid = escaparAttr(reg.id);
+  var qc = buscarCuartel(reg.cuartel);
+  var est = especieEstilo[qc.especie] || especieEstilo['Sin plantaci\u00f3n'];
+  var metaVar = qc.variedad || qc.especie || '';
 
-  var html = '<div class="record-card">';
+  var html = '<div class="record-card ' + est.clase + '">';
   html += '<div class="record-header" onclick="toggleRecordBody(this)">';
+  html += '<span class="rec-icon">' + est.icono + '</span>';
   html += '<div class="record-info">';
   html += '<div class="record-date">' + fechaFormateada + '</div>';
-  html += '<div class="record-meta">Cuartel ' + escaparHtml(reg.cuartel) + ' &middot; ' + nProd + ' producto' + (nProd !== 1 ? 's' : '') + '</div>';
+  html += '<div class="record-meta">Cuartel ' + escaparHtml(reg.cuartel) + (metaVar ? ' \u00b7 ' + escaparHtml(metaVar) : '') + ' &middot; ' + nProd + ' producto' + (nProd !== 1 ? 's' : '') + '</div>';
   html += '</div>';
-  html += '<span class="record-badge badge-green">' + nProd + '</span>';
+  html += '<span class="record-badge">' + nProd + '</span>';
   html += '</div>';
 
   html += '<div class="record-body">';
@@ -2780,8 +2834,156 @@ function renderCuarteles() {
   grid.innerHTML = html;
 }
 
+/* ==================== DASHBOARD Y DESCARGAS ==================== */
+function etiquetaMes(mesKey) {
+  var meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  var parts = String(mesKey).split('-');
+  if (parts.length < 2) return mesKey;
+  var m = parseInt(parts[1], 10);
+  return (m >= 1 && m <= 12 ? meses[m - 1] : parts[1]) + ' ' + parts[0];
+}
+
+function barrasHtml(pares) {
+  if (!pares.length) return '<div class="hint-text">Sin datos a\u00fan</div>';
+  var max = 0;
+  for (var i = 0; i < pares.length; i++) { if (pares[i].v > max) max = pares[i].v; }
+  var html = '';
+  for (var j = 0; j < pares.length; j++) {
+    var pct = Math.max(3, Math.round(pares[j].v / max * 100));
+    html += '<div class="bar-row"><span class="bl">' + escaparHtml(pares[j].label) + '</span>' +
+      '<span class="bt"><span class="bf" style="width:' + pct + '%"></span></span>' +
+      '<span class="bv">' + pares[j].v + '</span></div>';
+  }
+  return html;
+}
+
+function renderDashboard() {
+  var statsEl = document.getElementById('dashStats');
+  var cont = document.getElementById('dashContenido');
+  if (!statsEl || !cont) return;
+  var regs = cargarDatos().registros;
+
+  var totalRegs = regs.length;
+  var totalProds = 0;
+  var totalLitros = 0;
+  var porCuartel = {}, porProducto = {}, porMes = {}, porResponsable = {}, cuartelesSet = {};
+
+  for (var i = 0; i < regs.length; i++) {
+    var r = regs[i];
+    var ck = String(r.cuartel);
+    porCuartel[ck] = (porCuartel[ck] || 0) + 1;
+    cuartelesSet[ck] = true;
+    var mes = String(r.fecha || '').slice(0, 7);
+    if (mes.length === 7) porMes[mes] = (porMes[mes] || 0) + 1;
+    var prods = r.productos || [];
+    for (var j = 0; j < prods.length; j++) {
+      var p = prods[j];
+      totalProds++;
+      if (p.producto) porProducto[p.producto] = (porProducto[p.producto] || 0) + 1;
+      if (p.responsable) porResponsable[p.responsable] = (porResponsable[p.responsable] || 0) + 1;
+      var t = parseNum(p.total);
+      if (!isNaN(t)) totalLitros += t;
+    }
+  }
+  totalLitros = Math.round(totalLitros * 100) / 100;
+
+  statsEl.innerHTML =
+    '<div class="ch-stat"><div class="v">' + totalRegs + '</div><div class="l">Aplicaciones</div></div>' +
+    '<div class="ch-stat"><div class="v">' + totalProds + '</div><div class="l">Productos</div></div>' +
+    '<div class="ch-stat"><div class="v">' + fmtCL(totalLitros, 1) + '</div><div class="l">Litros apl.</div></div>' +
+    '<div class="ch-stat"><div class="v">' + Object.keys(cuartelesSet).length + '</div><div class="l">Cuarteles</div></div>';
+
+  var html = '<div class="sec-title">Rendimiento por m\u00f3dulo</div>';
+  html += '<div class="mod-grid">';
+  var mods = [
+    { icono: '\uD83E\uDDEA', titulo: 'Fitosanitarios', valor: totalRegs, sub: 'aplicaciones', extra: fmtCL(totalLitros, 1) + ' L aplicados' },
+    { icono: '\uD83D\uDCA7', titulo: 'Riego y Fert.', valor: null },
+    { icono: '\uD83D\uDCE6', titulo: 'Inventario', valor: null },
+    { icono: '\uD83C\uDF30', titulo: 'Lab. Nogal', valor: null },
+    { icono: '\uD83C\uDF47', titulo: 'Lab. Uva', valor: null },
+    { icono: '\uD83C\uDF52', titulo: 'Lab. Cerezo', valor: null },
+    { icono: '\uD83D\uDE9C', titulo: 'Lab. Generales', valor: null }
+  ];
+  for (var m = 0; m < mods.length; m++) {
+    var mo = mods[m];
+    html += '<div class="mod-card">';
+    html += '<div class="mi">' + mo.icono + '</div>';
+    html += '<div class="mt">' + mo.titulo + '</div>';
+    if (mo.valor === null) {
+      html += '<div class="mv">&mdash;</div><div class="ms">en construcci\u00f3n</div>';
+    } else {
+      html += '<div class="mv">' + mo.valor + '</div><div class="ms">' + mo.sub + '</div>';
+      html += '<div class="ms" style="text-transform:none;">' + mo.extra + '</div>';
+    }
+    html += '</div>';
+  }
+  html += '</div>';
+
+  if (totalRegs === 0) {
+    html += '<div class="empty-state"><div class="empty-icon">\uD83D\uDCCA</div><p>A\u00fan no hay registros.<br>El dashboard se llenar\u00e1 con las aplicaciones fitosanitarias.</p></div>';
+  } else {
+    var pC = [];
+    var keysC = Object.keys(porCuartel).sort(function(a, b) { return parseInt(a, 10) - parseInt(b, 10); });
+    for (var a = 0; a < keysC.length; a++) pC.push({ label: 'Cuartel ' + keysC[a], v: porCuartel[keysC[a]] });
+    html += '<div class="card"><div class="card-title">\uD83D\uDDFA\uFE0F Aplicaciones por cuartel</div>' + barrasHtml(pC) + '</div>';
+
+    var pP = [];
+    var keysP = Object.keys(porProducto).sort(function(a, b) { return porProducto[b] - porProducto[a]; }).slice(0, 5);
+    for (var b = 0; b < keysP.length; b++) pP.push({ label: keysP[b], v: porProducto[keysP[b]] });
+    if (pP.length) html += '<div class="card"><div class="card-title">\uD83E\uDDEA Productos m\u00e1s usados</div>' + barrasHtml(pP) + '</div>';
+
+    var pM = [];
+    var keysM = Object.keys(porMes).sort().slice(-6);
+    for (var c = 0; c < keysM.length; c++) pM.push({ label: etiquetaMes(keysM[c]), v: porMes[keysM[c]] });
+    html += '<div class="card"><div class="card-title">\uD83D\uDCC5 Aplicaciones por mes</div>' + barrasHtml(pM) + '</div>';
+
+    var pR = [];
+    var keysR = Object.keys(porResponsable).sort(function(a, b) { return porResponsable[b] - porResponsable[a]; });
+    for (var d = 0; d < keysR.length; d++) pR.push({ label: keysR[d], v: porResponsable[keysR[d]] });
+    if (pR.length) html += '<div class="card"><div class="card-title">\uD83D\uDC65 Productos por responsable</div>' + barrasHtml(pR) + '</div>';
+  }
+  cont.innerHTML = html;
+}
+
+function renderDescargas() {
+  var wrap = document.getElementById('descargasWrap');
+  if (!wrap) return;
+  var data = cargarDatos();
+  var n = data.registros.length;
+  var ultima = '';
+  for (var i = 0; i < data.registros.length; i++) {
+    if (String(data.registros[i].fecha || '') > ultima) ultima = data.registros[i].fecha;
+  }
+  var mods = [
+    { icono: '\uD83E\uDDEA', titulo: 'Aplicaciones Fitosanitarias', n: n, ultima: ultima },
+    { icono: '\uD83D\uDCA7', titulo: 'Riego y Fertilizaci\u00f3n', n: 0 },
+    { icono: '\uD83D\uDCE6', titulo: 'Inventario Bodega', n: 0 },
+    { icono: '\uD83C\uDF30', titulo: 'Labores Nogal', n: 0 },
+    { icono: '\uD83C\uDF47', titulo: 'Labores Uva', n: 0 },
+    { icono: '\uD83C\uDF52', titulo: 'Labores Cerezo', n: 0 },
+    { icono: '\uD83D\uDE9C', titulo: 'Labores Generales', n: 0 }
+  ];
+  var html = '<div class="hint-text" style="text-align:left;padding:4px 2px 12px;">Exporta los registros de cada m\u00f3dulo en formato CSV (compatible con Excel).</div>';
+  for (var k = 0; k < mods.length; k++) {
+    var mo = mods[k];
+    var activo = mo.n > 0;
+    html += '<div class="dl-card' + (activo ? '' : ' off') + '">';
+    html += '<span class="dl-icon">' + mo.icono + '</span>';
+    html += '<div class="dl-info"><div class="dl-title">' + mo.titulo + '</div>';
+    html += '<div class="dl-meta">' + (activo ? (mo.n + ' registro' + (mo.n !== 1 ? 's' : '') + (mo.ultima ? ' \u00b7 \u00faltima: ' + String(mo.ultima).split('-').reverse().join('/') : '')) : 'Sin registros \u2014 m\u00f3dulo en construcci\u00f3n') + '</div></div>';
+    if (activo) {
+      html += '<button class="btn btn-outline btn-sm" onclick="exportarCSV()">&#x1F4E5; CSV</button>';
+    } else {
+      html += '<button class="btn btn-outline btn-sm" disabled>CSV</button>';
+    }
+    html += '</div>';
+  }
+  wrap.innerHTML = html;
+}
+
 var menuModulos = [
   { id: 'inicio', titulo: 'Inicio', icono: '\uD83C\uDFE0' },
+  { id: 'dashboard', titulo: 'Dashboard', icono: '\uD83D\uDCCA', esModulo: true },
   { id: 'cuarteles', titulo: 'Cuarteles', icono: '\uD83D\uDDFA\uFE0F', esModulo: true },
   { id: 'riego', titulo: 'Riego y Fertilizaci\u00f3n', icono: '\uD83D\uDCA7' },
   { id: 'fitosanitarios', titulo: 'Aplicaciones Fitosanitarias', icono: '\uD83E\uDDEA', esModulo: true },
@@ -2803,7 +3005,8 @@ var menuModulos = [
     { id: 'cerezo-cosecha', titulo: 'Cosecha' }
   ]},
   { id: 'generales', titulo: 'Labores Generales', icono: '\uD83D\uDE9C' },
-  { id: 'mantenedores', titulo: 'Mantenedores', icono: '\u2699\uFE0F', esModulo: true }
+  { id: 'mantenedores', titulo: 'Mantenedores', icono: '\u2699\uFE0F', esModulo: true },
+  { id: 'descargas', titulo: 'Descargas', icono: '\uD83D\uDCE5', esModulo: true }
 ];
 
 function construirMenu() {
@@ -2877,6 +3080,8 @@ document.addEventListener('keydown', function(e) {
 function irAPagina(pageId, titulo, icono, ruta) {
   cerrarDrawer();
   if (pageId === 'fitosanitarios') sincronizarNube();
+  if (pageId === 'dashboard') renderDashboard();
+  if (pageId === 'descargas') renderDescargas();
   document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
 
   var hTitle = document.getElementById('headerTitle');
@@ -2897,7 +3102,14 @@ function irAPagina(pageId, titulo, icono, ruta) {
       if (hSub) hSub.textContent = 'Campo \u00b7 Temporada 2026';
     } else {
       if (hTitle) hTitle.textContent = titulo || '';
-      if (hSub) hSub.textContent = pageId === 'fitosanitarios' ? 'Registro de aplicaciones' : (pageId === 'cuarteles' ? 'Campo Aguirrana \u00b7 Detalle por cuartel' : (pageId === 'mantenedores' ? 'Responsables y datos base' : ''));
+      var subtitulos = {
+        fitosanitarios: 'Registro de aplicaciones',
+        cuarteles: 'Campo Aguirrana \u00b7 Detalle por cuartel',
+        mantenedores: 'Usuarios del sistema',
+        dashboard: 'Resumen y rendimiento del campo',
+        descargas: 'Exportar informaci\u00f3n'
+      };
+      if (hSub) hSub.textContent = subtitulos[pageId] || '';
     }
   }
   window.scrollTo({ top: 0, behavior: 'smooth' });
