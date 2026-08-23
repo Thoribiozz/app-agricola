@@ -411,6 +411,8 @@ body {
 .record-card.esp-uva { --acc: #7a5c90; --acc-pale: #f1eaf6; }
 .record-card.esp-cereza { --acc: var(--terracotta); --acc-pale: var(--terracotta-light); }
 .record-card.esp-vacio { --acc: var(--text-muted); --acc-pale: var(--border-light); }
+.record-card.anulado { opacity: 0.55; }
+.badge-anulado { background: var(--terracotta-light); color: var(--terracotta); }
 .record-card:hover {
   box-shadow: var(--shadow-lg);
   border-color: var(--fern-pale);
@@ -429,6 +431,53 @@ body {
 .historial-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
 @media (min-width: 540px) { .historial-grid { grid-template-columns: 1fr 1fr; } }
 .historial-grid .record-card { margin-bottom: 0; }
+
+/* ---------- TARJETA DE PRODUCTO EN HISTORIAL ---------- */
+.rec-hora { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 0.82rem; color: var(--text); font-weight: 700; }
+
+/* ---------- BARRA VOLVER (visible en cada pantalla) ---------- */
+.back-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: var(--white);
+  border: 1.5px solid var(--fern-pale);
+  border-left: 4px solid var(--fern);
+  border-radius: var(--r-sm);
+  padding: 12px 14px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--fern-dark);
+  cursor: pointer;
+  font-family: inherit;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-sm);
+  text-align: left;
+  transition: all 0.2s var(--ease);
+}
+.back-bar:active { background: var(--fern-wash); transform: scale(0.98); }
+.back-bar .bb-arrow {
+  font-size: 1.15rem;
+  line-height: 1;
+  background: var(--fern-wash);
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.prod-card { background: var(--fern-wash); border: 1px solid var(--border-light); border-radius: var(--r-sm); padding: 10px 12px; margin: 8px 0; }
+.pc-head { display: flex; align-items: center; gap: 8px; justify-content: space-between; }
+.pc-name { font-weight: 700; font-size: 0.82rem; color: var(--fern-dark); }
+.pc-tipo { font-size: 0.58rem; font-weight: 700; padding: 3px 9px; border-radius: var(--r-pill); background: var(--fern-pale); color: var(--fern-dark); white-space: nowrap; text-transform: uppercase; letter-spacing: 0.4px; flex-shrink: 0; }
+.pc-sub { font-size: 0.72rem; color: var(--text-secondary); margin: 3px 0 8px; }
+.pc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; }
+.pc-grid .k { display: block; font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-muted); }
+.pc-grid .v { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 700; font-size: 0.8rem; color: var(--text); }
+.pc-resp { margin-top: 8px; padding-top: 7px; border-top: 1px dashed var(--border); font-size: 0.76rem; color: var(--text); font-weight: 600; }
 .record-info { flex: 1; min-width: 0; }
 .record-date { font-weight: 700; font-size: 0.9rem; color: var(--text); }
 .record-meta { font-size: 0.72rem; color: var(--text-secondary); margin-top: 2px; }
@@ -977,6 +1026,14 @@ input[data-autofilled="true"] { background: var(--fern-wash) !important; border-
 .dl-info { flex: 1; min-width: 0; }
 .dl-title { font-weight: 700; font-size: 0.9rem; color: var(--text); }
 .dl-meta { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+.dl-alerta { border-color: var(--marigold); background: var(--marigold-pale); }
+
+/* ---------- CONFLICTOS DE SINCRONIZACION ---------- */
+.conflicto-row { display: flex; align-items: center; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--border-light); }
+.conflicto-row:last-child { border-bottom: none; }
+.cf-info { flex: 1; min-width: 0; font-size: 0.82rem; }
+.cf-sub { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+.cf-btns { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
 
 /* ---------- WELCOME ---------- */
 .welcome-hero {
@@ -1282,9 +1339,6 @@ input[data-autofilled="true"] { background: var(--fern-wash) !important; border-
   <button class="tab-btn active" data-tab="cuarteles">
     <span class="tab-icon">&#x1F5FA;&#xFE0F;</span> Cuarteles
   </button>
-  <button class="tab-btn" data-tab="historial">
-    <span class="tab-icon">&#x1F4CB;</span> Historial
-  </button>
 </nav>
 
 <main class="main-content">
@@ -1300,13 +1354,18 @@ input[data-autofilled="true"] { background: var(--fern-wash) !important; border-
 
     <!-- VISTA: DETALLE DEL CUARTEL -->
     <div id="viewCuartelDetalle" class="is-hidden">
+      <button class="back-bar" onclick="volverASelector()"><span class="bb-arrow">&#x2039;</span> Todos los cuarteles</button>
       <div class="detalle-head" id="detalleHead"></div>
       <button class="btn btn-primary" onclick="iniciarNuevoRegistro()">&#x2795; Nueva Aplicaci&oacute;n</button>
-      <div id="historialCuartel" style="margin-top:12px"></div>
+      <div class="filter-bar" style="margin-top:12px;">
+        <select id="filtroPeriodo" onchange="renderHistorialCuartel()"></select>
+      </div>
+      <div id="historialCuartel"></div>
     </div>
 
     <!-- VISTA: FORMULARIO DE INGRESO -->
     <div id="viewFormulario" class="is-hidden">
+      <button class="back-bar" onclick="volverADetalle()"><span class="bb-arrow">&#x2039;</span> Volver al cuartel</button>
       <div class="cancel-edit-bar" id="cancelEditBar">
         <span>Editando registro existente</span>
         <button class="btn btn-sm btn-ghost" onclick="volverADetalle()">Cancelar edici&oacute;n</button>
@@ -1355,7 +1414,6 @@ input[data-autofilled="true"] { background: var(--fern-wash) !important; border-
         <button class="btn btn-add" onclick="agregarFilaProducto()">+ Agregar Producto</button>
       </div>
 
-      <datalist id="productosSAG"></datalist>
       <datalist id="responsablesDatalist"></datalist>
 
       <div class="card" id="comentariosCard">
@@ -1370,33 +1428,7 @@ input[data-autofilled="true"] { background: var(--fern-wash) !important; border-
       <button class="btn btn-primary" id="btnGuardar" onclick="guardarRegistro()">
         &#x1F4BE; Guardar Registro
       </button>
-      <div style="height:10px"></div>
-      <button class="btn btn-outline" style="width:100%" onclick="volverADetalle()">&#x2039; Volver al cuartel</button>
     </div>
-  </section>
-
-  <!-- TAB: HISTORIAL -->
-  <section class="tab-panel" id="tab-historial">
-    <div id="alertHistorial" class="alert"></div>
-
-    <div class="summary-row" id="summaryRow"></div>
-
-    <div class="filter-bar">
-      <input type="date" id="filtroFecha" onchange="renderHistorial()">
-      <select id="filtroCuartel" onchange="renderHistorial()">
-        <option value="">Todos los cuarteles</option>
-      </select>
-      <select id="filtroResponsable" onchange="renderHistorial()">
-        <option value="">Todos los responsables</option>
-      </select>
-    </div>
-
-    <div class="filter-actions">
-      <button class="btn btn-outline btn-sm" onclick="limpiarFiltros()">Limpiar filtros</button>
-      <button class="btn btn-outline btn-sm" onclick="exportarCSV()">&#x1F4E5; Exportar CSV</button>
-    </div>
-
-    <div id="historialContainer"></div>
   </section>
 
 </main>
@@ -1510,6 +1542,17 @@ input[data-autofilled="true"] { background: var(--fern-wash) !important; border-
   </div>
 </div>
 
+<div class="modal-overlay" id="conflictoOverlay">
+  <div class="modal-box" style="max-width:400px;">
+    <h3>&#x26A0;&#xFE0F; Conflictos de sincronizaci&oacute;n</h3>
+    <p>Estos registros cambiaron en este tel&eacute;fono y tambi&eacute;n en la nube. Elige qu&eacute; versi&oacute;n conservar:</p>
+    <div id="conflictosList" style="text-align:left;max-height:50vh;overflow-y:auto;"></div>
+    <div class="btn-group" style="margin-top:14px;">
+      <button class="btn btn-outline btn-sm" onclick="cerrarConflictos()">Decidir despu&eacute;s</button>
+    </div>
+  </div>
+</div>
+
 <script>
 (function() {
 'use strict';
@@ -1531,12 +1574,12 @@ function fechaHoy() {
 function generarId() {
   return Date.now() + '-' + Math.floor(Math.random() * 100000);
 }
-function mostrarToast(msg) {
+function mostrarToast(msg, ms) {
   var t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
   clearTimeout(t._timeout);
-  t._timeout = setTimeout(function() { t.classList.remove('show'); }, 2200);
+  t._timeout = setTimeout(function() { t.classList.remove('show'); }, ms || 2200);
 }
 function mostrarAlerta(id, tipo, msg) {
   var el = document.getElementById(id);
@@ -1548,9 +1591,10 @@ function mostrarAlerta(id, tipo, msg) {
 
 /* ==================== MODAL ==================== */
 var modalCb = null;
-function abrirModal(titulo, msg, cb) {
+function abrirModal(titulo, msg, cb, btnTexto) {
   document.getElementById('modalTitle').textContent = titulo;
   document.getElementById('modalMsg').textContent = msg;
+  document.getElementById('modalBtnConfirm').textContent = btnTexto || 'Confirmar';
   document.getElementById('modalConfirm').classList.add('open');
   modalCb = cb;
 }
@@ -1603,9 +1647,27 @@ function guardarDatos(data) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     return true;
   } catch(e) {
-    mostrarToast('Error al guardar datos');
+    if (e && (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014)) {
+      mostrarToast('\u26a0\ufe0f Memoria del tel\u00e9fono llena \u2014 sincronizando para liberar espacio');
+      sincronizarNube();
+    } else {
+      mostrarToast('Error al guardar datos');
+    }
     return false;
   }
+}
+
+/* Monitoreo de cuota de almacenamiento local (riesgo: memoria del celular) */
+async function verificarAlmacenamiento() {
+  try {
+    if (navigator.storage && navigator.storage.estimate) {
+      var est = await navigator.storage.estimate();
+      if (est.quota && est.usage / est.quota > 0.8) {
+        var pct = Math.round(est.usage / est.quota * 100);
+        mostrarToast('\u26a0\ufe0f Memoria al ' + pct + '% \u2014 genere un respaldo en Descargas', 5000);
+      }
+    }
+  } catch(e) {}
 }
 
 var editandoId = null;
@@ -1742,7 +1804,7 @@ window.cerrarSesion = function() {
   abrirModal('Cerrar sesi\u00f3n', '\u00bfCerrar sesi\u00f3n en este dispositivo? Los datos sincronizados se conservan en la nube.', function() {
     limpiarSesion();
     location.reload();
-  });
+  }, 'Salir');
 };
 function renderUsuarioChip() {
   var el = document.getElementById('usuarioChip');
@@ -1764,6 +1826,15 @@ function encolar(op) {
   guardarOutbox(o);
 }
 
+/* Hash estable del contenido de un registro (inmune al orden de claves de jsonb) */
+function hashRegistro(r) {
+  var prods = (r.productos || []).map(function(p) {
+    return [p.especie, p.variedad, p.estadoFenologico, p.plaga, p.grupo, p.producto, p.ingredienteActivo, p.dosis, p.mojamiento, p.total, p.temperatura, p.viento, p.responsable]
+      .map(function(x) { return x == null ? '' : String(x); }).join('|');
+  }).join('||');
+  return [r.fecha || '', r.hora || '', String(r.cuartel || ''), r.comentarios || '', prods, r.anulado ? '1' : '0'].join('##');
+}
+
 async function pushRegistro(reg) {
   var body = {
     user_id: reg.user_id || (sesion ? sesion.userId : null),
@@ -1771,15 +1842,22 @@ async function pushRegistro(reg) {
     hora: reg.hora || null,
     cuartel: String(reg.cuartel),
     comentarios: reg.comentarios || '',
-    productos: reg.productos || []
+    productos: reg.productos || [],
+    anulado: !!reg.anulado,
+    modificado_por: sesion ? sesion.userId : null,
+    modificado_en: new Date().toISOString()
   };
   if (reg.cloud_id) {
     await sbFetch('registros?id=eq.' + reg.cloud_id, { method: 'PATCH', body: body });
+    reg.syncHash = hashRegistro(reg);
+    reg.conflicto = false;
   } else {
     var rows = await sbFetch('registros', { method: 'POST', body: body, prefer: 'return=representation' });
     if (rows && rows[0]) {
       reg.cloud_id = rows[0].id;
       reg.user_id = rows[0].user_id;
+      reg.syncHash = hashRegistro(reg);
+      reg.conflicto = false;
     }
   }
 }
@@ -1796,6 +1874,8 @@ function pushYGuardar(reg) {
     for (var i = 0; i < d.registros.length; i++) {
       if (String(d.registros[i].id) === String(reg.id)) {
         d.registros[i].cloud_id = reg.cloud_id;
+        d.registros[i].syncHash = reg.syncHash;
+        d.registros[i].conflicto = false;
         if (!d.registros[i].user_id) d.registros[i].user_id = reg.user_id;
         break;
       }
@@ -1834,33 +1914,168 @@ async function bajarRegistros() {
   var rows = await sbFetch('registros?select=*&order=fecha.desc,hora.desc');
   if (!rows) return;
   var data = cargarDatos();
-  var pendientes = [];
-  for (var i = 0; i < data.registros.length; i++) {
-    if (!data.registros[i].cloud_id) pendientes.push(data.registros[i]);
+  var porCloud = {};
+  var cloudIds = {};
+  var i, j;
+  for (i = 0; i < data.registros.length; i++) {
+    if (data.registros[i].cloud_id) porCloud[data.registros[i].cloud_id] = data.registros[i];
   }
-  var nuevos = [];
-  for (var j = 0; j < rows.length; j++) {
+  for (j = 0; j < rows.length; j++) cloudIds[rows[j].id] = true;
+
+  var resultado = [];
+  var conflictos = [];
+
+  // Registros nuevos locales (aun sin cloud_id) se conservan tal cual
+  for (i = 0; i < data.registros.length; i++) {
+    if (!data.registros[i].cloud_id) resultado.push(data.registros[i]);
+  }
+
+  for (j = 0; j < rows.length; j++) {
     var row = rows[j];
-    nuevos.push({
-      id: 'nube-' + row.id,
-      cloud_id: row.id,
-      user_id: row.user_id,
-      fecha: row.fecha,
-      hora: row.hora || '',
-      cuartel: row.cuartel,
-      productos: row.productos || [],
-      comentarios: row.comentarios || ''
-    });
+    var nubeObj = {
+      id: 'nube-' + row.id, cloud_id: row.id, user_id: row.user_id,
+      fecha: row.fecha, hora: row.hora || '', cuartel: row.cuartel,
+      productos: row.productos || [], comentarios: row.comentarios || '',
+      anulado: !!row.anulado, creado_en: row.creado_en || null,
+      modificado_por: row.modificado_por || null, modificado_en: row.modificado_en || null
+    };
+    var nubeHash = hashRegistro(nubeObj);
+    var local = porCloud[row.id];
+
+    if (!local) {
+      nubeObj.syncHash = nubeHash;
+      resultado.push(nubeObj);
+      continue;
+    }
+
+    var localHash = hashRegistro(local);
+
+    if (!local.syncHash) {
+      // Registro sincronizado antes de esta mejora: sin sello previo
+      if (localHash === nubeHash) {
+        local.syncHash = nubeHash; // contenido identico, solo sellar
+        resultado.push(local);
+      } else {
+        local.syncHash = ''; // marcar como pendiente de subir (sin molestar al usuario)
+        resultado.push(local);
+      }
+      continue;
+    }
+
+    if (localHash === local.syncHash) {
+      // Local sin cambios: la nube manda
+      local.fecha = nubeObj.fecha; local.hora = nubeObj.hora; local.cuartel = nubeObj.cuartel;
+      local.comentarios = nubeObj.comentarios; local.productos = nubeObj.productos;
+      local.user_id = nubeObj.user_id;
+      local.anulado = nubeObj.anulado; local.creado_en = nubeObj.creado_en;
+      local.modificado_por = nubeObj.modificado_por; local.modificado_en = nubeObj.modificado_en;
+      local.syncHash = nubeHash;
+      local.conflicto = false;
+      resultado.push(local);
+    } else if (nubeHash === local.syncHash) {
+      // Solo cambios locales: conservar local (se sube en subirPendientes)
+      resultado.push(local);
+    } else {
+      // CONFLICTO: ambos lados cambiaron -> el usuario decide
+      local.conflicto = true;
+      conflictos.push({ local: local, nube: nubeObj, nubeHash: nubeHash });
+      resultado.push(local);
+    }
   }
-  data.registros = pendientes.concat(nuevos);
+
+  // Registros borrados en la nube (otro dispositivo) con cambios locales pendientes
+  for (i = 0; i < data.registros.length; i++) {
+    var r2 = data.registros[i];
+    if (r2.cloud_id && !cloudIds[r2.cloud_id]) {
+      if (r2.syncHash && hashRegistro(r2) !== r2.syncHash) {
+        r2.conflicto = true;
+        conflictos.push({ local: r2, nube: null, nubeHash: null });
+        resultado.push(r2);
+      }
+      // si no tiene cambios locales, se descarta silenciosamente (borrado legitimo)
+    }
+  }
+
+  data.registros = resultado;
   guardarDatos(data);
+  if (conflictos.length) mostrarConflictos(conflictos);
 }
+
+/* ---------- CONFLICTOS DE SINCRONIZACION ---------- */
+var conflictosPendientes = [];
+
+function mostrarConflictos(lista) {
+  conflictosPendientes = lista;
+  renderConflictos();
+  document.getElementById('conflictoOverlay').classList.add('open');
+  mostrarToast('\u26a0\ufe0f ' + lista.length + ' conflicto(s) de sincronizaci\u00f3n \u2014 revisar');
+}
+
+function renderConflictos() {
+  var cont = document.getElementById('conflictosList');
+  if (!cont) return;
+  if (!conflictosPendientes.length) { cerrarConflictos(); return; }
+  var html = '';
+  for (var i = 0; i < conflictosPendientes.length; i++) {
+    var c = conflictosPendientes[i];
+    var f = String(c.local.fecha || '').split('-').reverse().join('/');
+    html += '<div class="conflicto-row">';
+    html += '<div class="cf-info"><b>' + escaparHtml(f) + ' \u00b7 Cuartel ' + escaparHtml(c.local.cuartel) + '</b>';
+    html += '<div class="cf-sub">' + (c.nube ? 'Cambiado en ambos lados' : 'Eliminado en la nube; tienes cambios locales') + '</div></div>';
+    html += '<div class="cf-btns">';
+    html += '<button class="btn btn-sm btn-outline" onclick="resolverConflicto(' + i + ', true)">Usar la m\u00eda</button>';
+    html += '<button class="btn btn-sm btn-outline" onclick="resolverConflicto(' + i + ', false)">Usar nube</button>';
+    html += '</div></div>';
+  }
+  cont.innerHTML = html;
+}
+
+window.resolverConflicto = async function(idx, usarLocal) {
+  var c = conflictosPendientes[idx];
+  if (!c) return;
+  var data = cargarDatos();
+  var reg = null;
+  for (var i = 0; i < data.registros.length; i++) {
+    if (String(data.registros[i].id) === String(c.local.id)) { reg = data.registros[i]; break; }
+  }
+  try {
+    if (usarLocal) {
+      if (!reg) throw new Error('sin registro local');
+      if (c.nube === null) { reg.cloud_id = null; reg.syncHash = null; } // recrear en la nube
+      await pushRegistro(reg);
+    } else {
+      if (c.nube === null) {
+        data.registros = data.registros.filter(function(r) { return String(r.id) !== String(c.local.id); });
+      } else if (reg) {
+        reg.fecha = c.nube.fecha; reg.hora = c.nube.hora; reg.cuartel = c.nube.cuartel;
+        reg.comentarios = c.nube.comentarios; reg.productos = c.nube.productos;
+        reg.user_id = c.nube.user_id;
+        reg.syncHash = c.nubeHash;
+        reg.conflicto = false;
+      }
+    }
+    guardarDatos(data);
+    conflictosPendientes.splice(idx, 1);
+    renderConflictos();
+    renderHistorialCuartel();
+    renderSelectorCuarteles();
+    mostrarToast('Conflicto resuelto');
+  } catch(e) {
+    mostrarToast('No se pudo aplicar \u2014 revise conexi\u00f3n');
+  }
+};
+
+window.cerrarConflictos = function() {
+  document.getElementById('conflictoOverlay').classList.remove('open');
+};
 
 async function subirPendientes() {
   var data = cargarDatos();
   var pend = [];
   for (var i = 0; i < data.registros.length; i++) {
-    if (!data.registros[i].cloud_id) pend.push(data.registros[i]);
+    var r = data.registros[i];
+    if (!r.cloud_id) pend.push(r);
+    else if (!r.conflicto && r.syncHash != null && hashRegistro(r) !== r.syncHash) pend.push(r);
   }
   for (var j = 0; j < pend.length; j++) {
     await pushRegistro(pend[j]);
@@ -1871,13 +2086,21 @@ async function subirPendientes() {
 
 async function cargarPerfilesNube() {
   try {
-    var rows = await sbFetch('perfiles?select=nombre,rol&order=nombre.asc');
+    var rows = await sbFetch('perfiles?select=id,nombre,rol&order=nombre.asc');
     if (rows) {
       perfilesNube = rows;
       renderResponsables();
       poblarDatalistResponsables();
     }
   } catch(e) {}
+}
+
+function nombreUsuario(uid) {
+  if (!uid) return '';
+  for (var i = 0; i < perfilesNube.length; i++) {
+    if (String(perfilesNube[i].id) === String(uid)) return perfilesNube[i].nombre;
+  }
+  return '';
 }
 
 async function sincronizarNube() {
@@ -1889,7 +2112,6 @@ async function sincronizarNube() {
     var subidos = await subirPendientes();
     await cargarPerfilesNube();
     await cargarCuartelesNube();
-    renderHistorial();
     renderHistorialCuartel();
     renderSelectorCuarteles();
     if (subidos > 0) mostrarToast('Sincronizado: ' + subidos + ' registro(s) respaldados en la nube');
@@ -2067,31 +2289,21 @@ function obtenerIngredienteActivo(producto) {
   return match ? match[2].trim() : '';
 }
 
-function filtrarProductosPorGrupo(grupo) {
-  var dl = document.getElementById('productosSAG');
-  if (!dl) return;
-  dl.innerHTML = '';
+function opcionesProductosHtml(grupo) {
   var productos = [];
   if (grupo && productosPorGrupo[grupo] && productosPorGrupo[grupo].length > 0) {
     productos = productosPorGrupo[grupo];
-  } else if (!grupo) {
+  } else {
     var keys = Object.keys(productosPorGrupo);
     for (var k = 0; k < keys.length; k++) {
       productos = productos.concat(productosPorGrupo[keys[k]]);
     }
-  } else {
-    var keys2 = Object.keys(productosPorGrupo);
-    for (var k2 = 0; k2 < keys2.length; k2++) {
-      productos = productos.concat(productosPorGrupo[keys2[k2]]);
-    }
   }
-  var frag = document.createDocumentFragment();
+  var html = '<option value="">-- Seleccionar --</option>';
   for (var i = 0; i < productos.length; i++) {
-    var opt = document.createElement('option');
-    opt.value = productos[i];
-    frag.appendChild(opt);
+    html += '<option value="' + escaparAttr(productos[i]) + '">' + escaparHtml(productos[i]) + '</option>';
   }
-  dl.appendChild(frag);
+  return html;
 }
 
 function poblarDatalistResponsables() {
@@ -2117,7 +2329,6 @@ document.querySelectorAll('.tab-btn').forEach(function(btn) {
     document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
     btn.classList.add('active');
     document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-    if (btn.dataset.tab === 'historial') renderHistorial();
     if (btn.dataset.tab === 'cuarteles') renderSelectorCuarteles();
   });
 });
@@ -2171,6 +2382,7 @@ window.renderSelectorCuarteles = function() {
   var data = cargarDatos();
   var conteos = {};
   for (var i = 0; i < data.registros.length; i++) {
+    if (data.registros[i].anulado) continue;
     var c = data.registros[i].cuartel;
     conteos[c] = (conteos[c] || 0) + 1;
   }
@@ -2196,7 +2408,6 @@ window.abrirCuartel = function(n) {
   var head = document.getElementById('detalleHead');
   head.className = 'detalle-head ' + est.clase;
   var html = '<div class="dh-top">';
-  html += '<button class="dh-back" onclick="volverASelector()" title="Volver">&#x2039;</button>';
   html += '<span class="dh-icon">' + est.icono + '</span>';
   html += '<div><div class="dh-name">Cuartel ' + q.n + '</div>';
   html += '<div class="dh-sub">' + escaparHtml(q.especie) + (q.variedad ? ' \u00b7 ' + escaparHtml(q.variedad) : '') + '</div></div>';
@@ -2231,6 +2442,24 @@ window.volverADetalle = function() {
   abrirCuartel(cuartelActivo);
 };
 
+function poblarFiltroPeriodo(registros) {
+  var sel = document.getElementById('filtroPeriodo');
+  if (!sel) return;
+  var actual = sel.value;
+  var meses = [];
+  for (var i = 0; i < registros.length; i++) {
+    var m = String(registros[i].fecha || '').slice(0, 7);
+    if (m.length === 7 && meses.indexOf(m) === -1) meses.push(m);
+  }
+  meses.sort().reverse();
+  var html = '<option value="">Todo el historial</option>';
+  for (var j = 0; j < meses.length; j++) {
+    html += '<option value="' + meses[j] + '">' + etiquetaMes(meses[j]) + '</option>';
+  }
+  sel.innerHTML = html;
+  sel.value = actual;
+}
+
 function renderHistorialCuartel() {
   var cont = document.getElementById('historialCuartel');
   if (!cont) return;
@@ -2239,6 +2468,14 @@ function renderHistorialCuartel() {
   for (var i = 0; i < data.registros.length; i++) {
     if (String(data.registros[i].cuartel) === String(cuartelActivo)) registros.push(data.registros[i]);
   }
+
+  poblarFiltroPeriodo(registros);
+  var selPeriodo = document.getElementById('filtroPeriodo');
+  var periodo = selPeriodo ? selPeriodo.value : '';
+  if (periodo) {
+    registros = registros.filter(function(r) { return String(r.fecha || '').slice(0, 7) === periodo; });
+  }
+
   registros.sort(function(a, b) {
     var fa = (a.fecha || '') + (a.hora || '');
     var fb = (b.fecha || '') + (b.hora || '');
@@ -2247,36 +2484,24 @@ function renderHistorialCuartel() {
   });
 
   if (registros.length === 0) {
-    cont.innerHTML = '<div class="empty-state"><div class="empty-icon">&#x1F4ED;</div><p>Este cuartel no tiene aplicaciones registradas</p></div>';
+    cont.innerHTML = '<div class="empty-state"><div class="empty-icon">&#x1F4ED;</div><p>' + (periodo ? 'Sin aplicaciones en este per\u00edodo' : 'Este cuartel no tiene aplicaciones registradas') + '</p></div>';
     return;
   }
-  var html = '<div class="hint-text" style="text-align:left;padding:10px 2px 8px;">Historial \u00b7 ' + registros.length + ' aplicacion' + (registros.length !== 1 ? 'es' : '') + '</div>';
+
+  var activos = [];
+  var anulados = [];
+  for (var k = 0; k < registros.length; k++) {
+    if (registros[k].anulado) anulados.push(registros[k]);
+    else activos.push(registros[k]);
+  }
+
+  var html = '<div class="hint-text" style="text-align:left;padding:10px 2px 8px;">Historial \u00b7 ' + activos.length + ' aplicacion' + (activos.length !== 1 ? 'es' : '') + (anulados.length ? ' \u00b7 ' + anulados.length + ' anulada(s)' : '') + '</div>';
   html += '<div class="historial-grid">';
-  for (var j = 0; j < registros.length; j++) html += recordCardHtml(registros[j]);
+  for (var j = 0; j < activos.length; j++) html += recordCardHtml(activos[j]);
+  for (var m = 0; m < anulados.length; m++) html += recordCardHtml(anulados[m]);
   html += '</div>';
   cont.innerHTML = html;
 }
-
-/* ==================== FILTROS ==================== */
-function poblarFiltroCuarteles() {
-  var filtroCuartel = document.getElementById('filtroCuartel');
-  var actual = filtroCuartel.value;
-  filtroCuartel.innerHTML = '<option value="">Todos los cuarteles</option>';
-  for (var j = 0; j < cuartelesData.length; j++) {
-    var o = document.createElement('option');
-    o.value = String(cuartelesData[j].n);
-    o.textContent = 'Cuartel ' + cuartelesData[j].n;
-    filtroCuartel.appendChild(o);
-  }
-  filtroCuartel.value = actual;
-}
-
-window.limpiarFiltros = function() {
-  document.getElementById('filtroFecha').value = '';
-  document.getElementById('filtroCuartel').value = '';
-  document.getElementById('filtroResponsable').value = '';
-  renderHistorial();
-};
 
 /* ==================== FILAS DE PRODUCTOS ==================== */
 function opcionesHtml(lista) {
@@ -2349,8 +2574,8 @@ window.agregarFilaProducto = function(datos) {
     '<td><select class="f-estado">' + opcionesHtml(estadosFenologicos) + '</select></td>' +
     '<td><select class="f-plaga">' + opcionesHtml(plagasObjetivo) + '</select></td>' +
     '<td><select class="f-grupo">' + opcionesHtml(gruposProductos) + '</select></td>' +
-    '<td><input type="text" class="f-producto" placeholder="Buscar producto..." list="productosSAG" autocomplete="off" value="' + escaparAttr(datos.producto || '') + '"></td>' +
-    '<td><input type="text" class="f-ingrediente" placeholder="Principio activo (auto)" value="' + escaparAttr(datos.ingredienteActivo || '') + '"' + (datos.ingredienteActivo ? ' data-autofilled="false"' : '') + '></td>' +
+    '<td><select class="f-producto">' + opcionesProductosHtml(datos.grupo || '') + '</select></td>' +
+    '<td><input type="text" class="f-ingrediente ro-text" readonly tabindex="-1" placeholder="Autom\u00e1tico" value="' + escaparAttr(datos.ingredienteActivo || '') + '"></td>' +
     '<td><input type="text" class="f-dosis" placeholder="cc / 100L" value="' + escaparAttr(datos.dosis || '') + '"></td>' +
     '<td><input type="text" class="f-mojamiento" placeholder="Lts/ha" value="' + escaparAttr(datos.mojamiento || '') + '"></td>' +
     '<td><input type="text" class="f-total" placeholder="Auto" readonly tabindex="-1" value="' + escaparAttr(datos.total || '') + '"></td>' +
@@ -2361,27 +2586,16 @@ window.agregarFilaProducto = function(datos) {
 
   // Eventos
   tr.querySelector('.f-grupo').addEventListener('change', function() {
-    filtrarProductosPorGrupo(this.value);
-    var prodInput = tr.querySelector('.f-producto');
-    if (prodInput) prodInput.focus();
+    var sel = tr.querySelector('.f-producto');
+    sel.innerHTML = opcionesProductosHtml(this.value);
+    sel.focus();
+  });
+
+  tr.querySelector('.f-producto').addEventListener('change', function() {
+    tr.querySelector('.f-ingrediente').value = obtenerIngredienteActivo(this.value) || '';
   });
 
   tr.querySelector('.f-temperatura').addEventListener('input', function() {
-    this.dataset.autofilled = 'false';
-  });
-
-  tr.querySelector('.f-producto').addEventListener('input', function() {
-    var ingrediente = obtenerIngredienteActivo(this.value.trim());
-    var ingInput = tr.querySelector('.f-ingrediente');
-    if (ingInput && ingrediente) {
-      if (!ingInput.value || ingInput.dataset.autofilled === 'true') {
-        ingInput.value = ingrediente;
-        ingInput.dataset.autofilled = 'true';
-      }
-    }
-  });
-
-  tr.querySelector('.f-ingrediente').addEventListener('input', function() {
     this.dataset.autofilled = 'false';
   });
 
@@ -2399,6 +2613,7 @@ window.agregarFilaProducto = function(datos) {
   setSelectValue(tr.querySelector('.f-estado'), datos.estadoFenologico);
   setSelectValue(tr.querySelector('.f-plaga'), datos.plaga);
   setSelectValue(tr.querySelector('.f-grupo'), datos.grupo);
+  setSelectValue(tr.querySelector('.f-producto'), datos.producto);
   setSelectValue(tr.querySelector('.f-viento'), datos.viento);
 
   var tempInput = tr.querySelector('.f-temperatura');
@@ -2465,7 +2680,6 @@ window.guardarRegistro = function() {
       mostrarToast('Registro actualizado');
       cancelarEdicion();
       abrirCuartel(cuartelActivo);
-      renderHistorial();
       renderSelectorCuarteles();
       pushYGuardar(regEdit);
     }
@@ -2484,7 +2698,6 @@ window.guardarRegistro = function() {
       mostrarToast('Registro guardado');
       limpiarFormulario();
       abrirCuartel(cuartelActivo);
-      renderHistorial();
       renderSelectorCuarteles();
       pushYGuardar(nuevoReg);
     }
@@ -2571,109 +2784,32 @@ window.duplicarRegistro = function(id) {
 };
 
 window.eliminarRegistro = function(id) {
-  abrirModal('Eliminar Registro', '\u00BFEst\u00E1 seguro de eliminar este registro? Esta acci\u00F3n no se puede deshacer.', function() {
+  abrirModal('Anular Registro', '\u00bfAnular este registro? Quedar\u00e1 marcado como ANULADO y se conservar\u00e1 en la base de datos (no se elimina f\u00edsicamente).', function() {
     var data = cargarDatos();
     var victim = null;
     for (var i = 0; i < data.registros.length; i++) {
       if (String(data.registros[i].id) === String(id)) { victim = data.registros[i]; break; }
     }
-    data.registros = data.registros.filter(function(r) { return String(r.id) !== String(id); });
+    if (!victim) return;
+    victim.anulado = true;
+    victim.modificado_por = sesion ? sesion.userId : null;
+    victim.modificado_en = new Date().toISOString();
     guardarDatos(data);
-    if (victim && victim.cloud_id && sesion) {
-      if (!navigator.onLine) {
-        encolar({ tipo: 'delete', cloudId: victim.cloud_id });
-      } else {
-        sbFetch('registros?id=eq.' + victim.cloud_id, { method: 'DELETE' }).catch(function() {
-          encolar({ tipo: 'delete', cloudId: victim.cloud_id });
-        });
-      }
-    }
-    mostrarToast('Registro eliminado');
+    pushYGuardar(victim);
+    mostrarToast('Registro anulado');
     if (String(editandoId) === String(id)) cancelarEdicion();
-    renderHistorial();
     renderHistorialCuartel();
     renderSelectorCuarteles();
-  });
+  }, 'Anular');
 };
 
-/* ==================== HISTORIAL ==================== */
-function actualizarFiltroResponsables() {
-  var data = cargarDatos();
-  var sel = document.getElementById('filtroResponsable');
-  var actual = sel.value;
-  sel.innerHTML = '<option value="">Todos los responsables</option>';
-  var names = [];
-  for (var i = 0; i < data.registros.length; i++) {
-    var prods = data.registros[i].productos || [];
-    for (var j = 0; j < prods.length; j++) {
-      var r = prods[j].responsable;
-      if (r && names.indexOf(r) === -1) names.push(r);
-    }
-  }
-  names.sort();
-  for (var k = 0; k < names.length; k++) {
-    var o = document.createElement('option');
-    o.value = names[k];
-    o.textContent = names[k];
-    sel.appendChild(o);
-  }
-  if (names.indexOf(actual) !== -1) sel.value = actual;
+/* ==================== HISTORIAL (tarjeta compartida) ==================== */
+function pcDato(label, valor) {
+  return '<div><span class="k">' + label + '</span><span class="v">' + escaparHtml(valor != null && valor !== '' ? valor : '-') + '</span></div>';
 }
-
-window.renderHistorial = function() {
-  var data = cargarDatos();
-  var registros = data.registros.slice().sort(function(a, b) {
-    var fa = a.fecha || '', fb = b.fecha || '';
-    if (fa !== fb) return fa < fb ? 1 : -1;
-    return String(b.id) < String(a.id) ? -1 : 1;
-  });
-
-  var filtroF = document.getElementById('filtroFecha').value;
-  var filtroC = document.getElementById('filtroCuartel').value;
-  var filtroR = document.getElementById('filtroResponsable').value;
-
-  if (filtroF) registros = registros.filter(function(r) { return r.fecha === filtroF; });
-  if (filtroC) registros = registros.filter(function(r) { return String(r.cuartel) === filtroC; });
-  if (filtroR) registros = registros.filter(function(r) {
-    var prods = r.productos || [];
-    for (var i = 0; i < prods.length; i++) {
-      if (prods[i].responsable === filtroR) return true;
-    }
-    return false;
-  });
-
-  actualizarFiltroResponsables();
-
-  var totalProductos = 0;
-  var cuartelesUnicos = {};
-  for (var t = 0; t < registros.length; t++) {
-    totalProductos += (registros[t].productos || []).length;
-    cuartelesUnicos[registros[t].cuartel] = true;
-  }
-
-  document.getElementById('summaryRow').innerHTML =
-    '<div class="summary-card"><div class="num">' + registros.length + '</div><div class="label">Registros</div></div>' +
-    '<div class="summary-card"><div class="num">' + totalProductos + '</div><div class="label">Productos</div></div>' +
-    '<div class="summary-card"><div class="num">' + Object.keys(cuartelesUnicos).length + '</div><div class="label">Cuarteles</div></div>';
-
-  var container = document.getElementById('historialContainer');
-
-  if (registros.length === 0) {
-    container.innerHTML = '<div class="empty-state"><div class="empty-icon">&#x1F4ED;</div><p>No hay registros guardados</p></div>';
-    return;
-  }
-
-  var html = '';
-  for (var i = 0; i < registros.length; i++) {
-    html += recordCardHtml(registros[i]);
-  }
-
-  container.innerHTML = '<div class="historial-grid">' + html + '</div>';
-};
 
 function recordCardHtml(reg) {
   var fechaFormateada = String(reg.fecha || '').split('-').reverse().join('/');
-  if (reg.hora) fechaFormateada += ' \u00b7 ' + reg.hora;
   var prods = reg.productos || [];
   var nProd = prods.length;
   var rid = escaparAttr(reg.id);
@@ -2681,50 +2817,73 @@ function recordCardHtml(reg) {
   var est = especieEstilo[qc.especie] || especieEstilo['Sin plantaci\u00f3n'];
   var metaVar = qc.variedad || qc.especie || '';
 
-  var html = '<div class="record-card ' + est.clase + '">';
+  var respSet = [];
+  for (var x = 0; x < prods.length; x++) {
+    var rp = prods[x].responsable;
+    if (rp && respSet.indexOf(rp) === -1) respSet.push(rp);
+  }
+
+  var html = '<div class="record-card ' + est.clase + (reg.anulado ? ' anulado' : '') + '">';
   html += '<div class="record-header" onclick="toggleRecordBody(this)">';
   html += '<span class="rec-icon">' + est.icono + '</span>';
   html += '<div class="record-info">';
-  html += '<div class="record-date">' + fechaFormateada + '</div>';
+  html += '<div class="record-date">\uD83D\uDCC5 ' + fechaFormateada + (reg.hora ? ' <span class="rec-hora">\u00b7 \uD83D\uDD52 ' + escaparHtml(reg.hora) + '</span>' : '') + '</div>';
   html += '<div class="record-meta">Cuartel ' + escaparHtml(reg.cuartel) + (metaVar ? ' \u00b7 ' + escaparHtml(metaVar) : '') + ' &middot; ' + nProd + ' producto' + (nProd !== 1 ? 's' : '') + '</div>';
+  if (respSet.length) html += '<div class="record-meta">\uD83D\uDC64 ' + escaparHtml(respSet.join(', ')) + '</div>';
   html += '</div>';
-  html += '<span class="record-badge">' + nProd + '</span>';
+  if (reg.anulado) {
+    html += '<span class="record-badge badge-anulado">ANULADO</span>';
+  } else {
+    html += '<span class="record-badge">' + nProd + '</span>';
+  }
   html += '</div>';
 
   html += '<div class="record-body">';
-  html += '<table class="mini-table"><thead><tr><th>Tipo</th><th>Prod.</th><th>Plaga</th><th>I. Activo</th><th>Dosis</th><th>Moj.</th><th>Total</th><th>Temp</th><th>Viento</th><th>Resp.</th></tr></thead><tbody>';
   for (var j = 0; j < prods.length; j++) {
     var p = prods[j];
-    html += '<tr>';
-    html += '<td>' + escaparHtml(p.grupo || '-') + '</td>';
-    html += '<td>' + escaparHtml(p.producto || '-') + '</td>';
-    html += '<td>' + escaparHtml(p.plaga || '-') + '</td>';
-    html += '<td>' + escaparHtml(p.ingredienteActivo || '-') + '</td>';
-    html += '<td>' + escaparHtml(p.dosis || '-') + '</td>';
-    html += '<td>' + escaparHtml(p.mojamiento || '-') + '</td>';
-    html += '<td>' + escaparHtml(p.total || '-') + '</td>';
-    html += '<td>' + escaparHtml(p.temperatura || '-') + '</td>';
-    html += '<td>' + escaparHtml(p.viento || '-') + '</td>';
-    html += '<td>' + escaparHtml(p.responsable || '-') + '</td>';
-    html += '</tr>';
+    html += '<div class="prod-card">';
+    html += '<div class="pc-head">';
+    html += '<span class="pc-name">' + escaparHtml(p.producto || '-') + '</span>';
+    if (p.grupo) html += '<span class="pc-tipo">' + escaparHtml(p.grupo) + '</span>';
+    html += '</div>';
+    var sub = [];
+    if (p.estadoFenologico) sub.push(p.estadoFenologico);
+    if (p.plaga) sub.push(p.plaga);
+    if (sub.length) html += '<div class="pc-sub">' + escaparHtml(sub.join(' \u00b7 ')) + '</div>';
+    html += '<div class="pc-grid">';
+    html += pcDato('I. Activo', p.ingredienteActivo);
+    html += pcDato('Dosis (cc/100L)', p.dosis);
+    html += pcDato('Mojamiento (L/ha)', p.mojamiento);
+    html += pcDato('Total (L o Kg)', p.total);
+    html += pcDato('Temp (\u00b0C)', p.temperatura);
+    html += pcDato('Viento', p.viento);
+    html += '</div>';
+    if (p.responsable) html += '<div class="pc-resp">\uD83D\uDC64 ' + escaparHtml(p.responsable) + '</div>';
+    html += '</div>';
   }
-  html += '</tbody></table>';
 
   if (reg.comentarios) {
     html += '<div class="comment-row"><strong>Comentarios:</strong> ' + escaparHtml(reg.comentarios) + '</div>';
   }
 
-  var puedeEditar = true;
-  var puedeEliminar = true;
-  if (sesion && !esAdmin()) {
-    puedeEliminar = false;
-    puedeEditar = !reg.user_id || String(reg.user_id) === String(sesion.userId);
+  var ingNombre = nombreUsuario(reg.user_id);
+  if (ingNombre || reg.creado_en) {
+    html += '<div class="comment-row" style="font-style:normal;">\uD83D\uDCDD Ingresado por <b>' + escaparHtml(ingNombre || 'usuario') + '</b>' + (reg.creado_en ? ' \u00b7 ' + escaparHtml(String(reg.creado_en).slice(0, 10).split('-').reverse().join('/')) : '') + '</div>';
   }
-  html += '<div class="record-actions">';
-  if (puedeEditar) html += '<button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); editarRegistro(\'' + rid + '\')">&#x270F; Editar</button>';
-  html += '<button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); duplicarRegistro(\'' + rid + '\')">&#x2398; Duplicar</button>';
-  if (puedeEliminar) html += '<button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); eliminarRegistro(\'' + rid + '\')">&#x1F5D1; Eliminar</button>';
-  html += '</div>';
+
+  if (!reg.anulado) {
+    var puedeEditar = true;
+    var puedeEliminar = true;
+    if (sesion && !esAdmin()) {
+      puedeEliminar = false;
+      puedeEditar = !reg.user_id || String(reg.user_id) === String(sesion.userId);
+    }
+    html += '<div class="record-actions">';
+    if (puedeEditar) html += '<button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); editarRegistro(\'' + rid + '\')">&#x270F; Editar</button>';
+    html += '<button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); duplicarRegistro(\'' + rid + '\')">&#x2398; Duplicar</button>';
+    if (puedeEliminar) html += '<button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); eliminarRegistro(\'' + rid + '\')">&#x26D4; Anular</button>';
+    html += '</div>';
+  }
 
   html += '</div></div>';
   return html;
@@ -2746,6 +2905,7 @@ window.exportarCSV = function() {
   var registros = data.registros.slice().sort(function(a, b) { return (a.fecha || '') < (b.fecha || '') ? -1 : 1; });
   for (var i = 0; i < registros.length; i++) {
     var reg = registros[i];
+    if (reg.anulado) continue;
     var prods = reg.productos || [];
     if (prods.length === 0) {
       lineas.push([reg.fecha, reg.hora || '', reg.cuartel, '', '', '', '', '', '', '', '', '', '', '', '', '', reg.comentarios || '']);
@@ -2842,7 +3002,6 @@ async function cargarCuartelesNube() {
       localStorage.setItem(CUARTELES_KEY, JSON.stringify(cuartelesData));
       renderCuarteles();
       renderSelectorCuarteles();
-      poblarFiltroCuarteles();
       renderEditorCuarteles();
     }
   } catch(e) {}
@@ -2960,7 +3119,7 @@ window.eliminarCuartel = function(n) {
       await cargarCuartelesNube();
       mostrarToast('Cuartel eliminado');
     } catch(e) { mostrarToast('Error al eliminar'); }
-  });
+  }, 'Eliminar');
 };
 
 var especieEstilo = {
@@ -3082,6 +3241,7 @@ function renderDashboard() {
 
   for (var i = 0; i < regs.length; i++) {
     var r = regs[i];
+    if (r.anulado) continue;
     var ck = String(r.cuartel);
     porCuartel[ck] = (porCuartel[ck] || 0) + 1;
     cuartelesSet[ck] = true;
@@ -3131,6 +3291,16 @@ function renderDashboard() {
   }
   html += '</div>';
 
+  var dR = diasDesdeUltimoRespaldo();
+  if (dR > 30) {
+    html += '<div class="dl-card dl-alerta">';
+    html += '<span class="dl-icon">\u26A0\uFE0F</span>';
+    html += '<div class="dl-info"><div class="dl-title">Respaldo externo pendiente</div>';
+    html += '<div class="dl-meta">' + (dR === 9999 ? 'Nunca se ha generado un respaldo fuera de la nube.' : 'Hace ' + dR + ' d\u00edas sin respaldo externo.') + '</div></div>';
+    html += '<button class="btn btn-sm btn-primary" onclick="irAPagina(\'descargas\', \'Descargas\', \'\uD83D\uDCE5\')">Ir</button>';
+    html += '</div>';
+  }
+
   if (totalRegs === 0) {
     html += '<div class="empty-state"><div class="empty-icon">\uD83D\uDCCA</div><p>A\u00fan no hay registros.<br>El dashboard se llenar\u00e1 con las aplicaciones fitosanitarias.</p></div>';
   } else {
@@ -3157,11 +3327,44 @@ function renderDashboard() {
   cont.innerHTML = html;
 }
 
+/* ---------- RESPALDO EXTERNO (riesgo: dependencia de un solo proveedor) ---------- */
+var BACKUP_KEY = 'ultimo_respaldo';
+
+function diasDesdeUltimoRespaldo() {
+  var u = localStorage.getItem(BACKUP_KEY);
+  if (!u) return 9999;
+  return Math.floor((Date.now() - new Date(u + 'T00:00:00').getTime()) / 86400000);
+}
+
+window.descargarRespaldo = function() {
+  var payload = {
+    app: 'Bitacora Agricola - Campo Aguirrana',
+    generado: new Date().toISOString(),
+    cuarteles: cuartelesData,
+    usuarios: perfilesNube,
+    registros: cargarDatos().registros
+  };
+  var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8;' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'respaldo_bitacora_' + fechaHoy() + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  localStorage.setItem(BACKUP_KEY, fechaHoy());
+  mostrarToast('Respaldo generado \u2014 gu\u00e1rdalo en Drive, iCloud o tu PC', 4000);
+  renderDescargas();
+  renderDashboard();
+};
+
 function renderDescargas() {
   var wrap = document.getElementById('descargasWrap');
   if (!wrap) return;
   var data = cargarDatos();
-  var n = data.registros.length;
+  var n = 0;
+  for (var z = 0; z < data.registros.length; z++) { if (!data.registros[z].anulado) n++; }
   var ultima = '';
   for (var i = 0; i < data.registros.length; i++) {
     if (String(data.registros[i].fecha || '') > ultima) ultima = data.registros[i].fecha;
@@ -3176,6 +3379,15 @@ function renderDescargas() {
     { icono: '\uD83D\uDE9C', titulo: 'Labores Generales', n: 0 }
   ];
   var html = '<div class="hint-text" style="text-align:left;padding:4px 2px 12px;">Exporta los registros de cada m\u00f3dulo en formato CSV (compatible con Excel).</div>';
+
+  var dR = diasDesdeUltimoRespaldo();
+  var atrasado = dR > 30;
+  html += '<div class="dl-card' + (atrasado ? ' dl-alerta' : '') + '">';
+  html += '<span class="dl-icon">\uD83D\uDCBE</span>';
+  html += '<div class="dl-info"><div class="dl-title">Respaldo completo del sistema</div>';
+  html += '<div class="dl-meta">' + (dR === 9999 ? '\u26a0\ufe0f Nunca se ha generado un respaldo externo' : '\u00daltimo respaldo: ' + String(localStorage.getItem(BACKUP_KEY)).split('-').reverse().join('/') + ' (hace ' + dR + ' d\u00edas)' + (atrasado ? ' \u2014 genera uno nuevo' : '')) + '</div></div>';
+  html += '<button class="btn btn-outline btn-sm" onclick="descargarRespaldo()">\uD83D\uDCE5 JSON</button>';
+  html += '</div>';
   for (var k = 0; k < mods.length; k++) {
     var mo = mods[k];
     var activo = mo.n > 0;
@@ -3195,7 +3407,6 @@ function renderDescargas() {
 
 var menuModulos = [
   { id: 'inicio', titulo: 'Inicio', icono: '\uD83C\uDFE0' },
-  { id: 'dashboard', titulo: 'Dashboard', icono: '\uD83D\uDCCA', esModulo: true },
   { id: 'cuarteles', titulo: 'Cuarteles', icono: '\uD83D\uDDFA\uFE0F', esModulo: true },
   { id: 'riego', titulo: 'Riego y Fertilizaci\u00f3n', icono: '\uD83D\uDCA7' },
   { id: 'fitosanitarios', titulo: 'Aplicaciones Fitosanitarias', icono: '\uD83E\uDDEA', esModulo: true },
@@ -3217,6 +3428,7 @@ var menuModulos = [
     { id: 'cerezo-cosecha', titulo: 'Cosecha' }
   ]},
   { id: 'generales', titulo: 'Labores Generales', icono: '\uD83D\uDE9C' },
+  { id: 'dashboard', titulo: 'Dashboard', icono: '\uD83D\uDCCA', esModulo: true },
   { id: 'mantenedores', titulo: 'Mantenedores', icono: '\u2699\uFE0F', esModulo: true },
   { id: 'descargas', titulo: 'Descargas', icono: '\uD83D\uDCE5', esModulo: true }
 ];
@@ -3478,11 +3690,8 @@ window.iniciarBienvenida = function() {
 /* ==================== INIT ==================== */
 construirMapaIngredientes();
 poblarDatalistResponsables();
-filtrarProductosPorGrupo(null);
 renderResponsables();
-renderHistorial();
 renderCuarteles();
-poblarFiltroCuarteles();
 renderSelectorCuarteles();
 renderEditorCuarteles();
 construirMenu();
@@ -3500,6 +3709,7 @@ document.querySelectorAll('#mantChips .chip').forEach(function(b) {
 
 /* ==================== SESION / ARRANQUE ==================== */
 cargarSesion();
+verificarAlmacenamiento();
 if (sesion) {
   entrarApp();
   sincronizarNube();
