@@ -1412,12 +1412,75 @@ input[data-autofilled="true"] { background: var(--fern-wash) !important; border-
 <!-- PAGE: MANTENEDORES -->
 <div class="page" id="page-mantenedores">
   <main class="main-content">
-    <div class="card">
-      <div class="card-title">&#x1F465; Usuarios del Sistema</div>
-      <div id="responsablesList"></div>
-      <div class="hint-text" style="padding:10px 4px 2px;text-align:left;">Para agregar usuarios o cambiar contrase&ntilde;as se usa el panel de Supabase (Authentication &rsaquo; Users). Av&iacute;same y te ayudo.</div>
+    <div class="chips-row" id="mantChips">
+      <button class="chip active" data-mtab="usuarios">&#x1F465; Usuarios</button>
+      <button class="chip" data-mtab="cuarteles">&#x1F5FA;&#xFE0F; Cuarteles</button>
     </div>
-    <div id="alertResponsables" class="alert"></div>
+
+    <div id="mtab-usuarios">
+      <div class="card">
+        <div class="card-title">&#x1F465; Usuarios del Sistema</div>
+        <div id="responsablesList"></div>
+        <div class="hint-text" style="padding:10px 4px 2px;text-align:left;">Para agregar usuarios o cambiar contrase&ntilde;as se usa el panel de Supabase (Authentication &rsaquo; Users). Av&iacute;same y te ayudo.</div>
+      </div>
+      <div id="alertResponsables" class="alert"></div>
+    </div>
+
+    <div id="mtab-cuarteles" class="is-hidden">
+      <div class="card">
+        <div class="card-title">&#x1F5FA;&#xFE0F; Cuarteles del Campo</div>
+        <div id="editorCuartelesList"></div>
+        <button class="btn btn-add" onclick="abrirFormCuartel()">+ Agregar cuartel</button>
+      </div>
+
+      <div class="card is-hidden" id="formCuartelCard">
+        <div class="card-title" id="formCuartelTitulo">Nuevo cuartel</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="cfN">N&deg; Cuartel</label>
+            <input type="number" id="cfN" min="1">
+          </div>
+          <div class="form-group">
+            <label for="cfEspecie">Especie</label>
+            <select id="cfEspecie">
+              <option>Uva</option>
+              <option>Nogal</option>
+              <option>Cereza</option>
+              <option>Sin plantaci&oacute;n</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="cfVariedad">Variedad</label>
+            <input type="text" id="cfVariedad" placeholder="Ej: Chandler">
+          </div>
+          <div class="form-group">
+            <label for="cfSuperficie">Superficie (ha)</label>
+            <input type="text" id="cfSuperficie" inputmode="decimal" placeholder="Ej: 1,5">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="cfAno">A&ntilde;o plantaci&oacute;n</label>
+            <input type="number" id="cfAno" min="1950" max="2100">
+          </div>
+          <div class="form-group">
+            <label for="cfMarco">Marco plantaci&oacute;n</label>
+            <input type="text" id="cfMarco" placeholder="Ej: 7,0 x 6,0">
+          </div>
+          <div class="form-group">
+            <label for="cfPlantas">N&deg; Plantas</label>
+            <input type="number" id="cfPlantas" min="0">
+          </div>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-outline btn-sm" onclick="cerrarFormCuartel()">Cancelar</button>
+          <button class="btn btn-primary btn-sm" onclick="guardarCuartel()">&#x1F4BE; Guardar cuartel</button>
+        </div>
+      </div>
+      <div id="alertEditorCuarteles" class="alert"></div>
+    </div>
   </main>
 </div>
 <!-- FIN PAGE: MANTENEDORES -->
@@ -1673,6 +1736,7 @@ function mostrarLogin() {
 function entrarApp() {
   document.getElementById('loginOverlay').classList.add('is-hidden');
   renderUsuarioChip();
+  renderEditorCuarteles();
 }
 window.cerrarSesion = function() {
   abrirModal('Cerrar sesi\u00f3n', '\u00bfCerrar sesi\u00f3n en este dispositivo? Los datos sincronizados se conservan en la nube.', function() {
@@ -1824,6 +1888,7 @@ async function sincronizarNube() {
     await bajarRegistros();
     var subidos = await subirPendientes();
     await cargarPerfilesNube();
+    await cargarCuartelesNube();
     renderHistorial();
     renderHistorialCuartel();
     renderSelectorCuarteles();
@@ -2195,12 +2260,15 @@ function renderHistorialCuartel() {
 /* ==================== FILTROS ==================== */
 function poblarFiltroCuarteles() {
   var filtroCuartel = document.getElementById('filtroCuartel');
+  var actual = filtroCuartel.value;
+  filtroCuartel.innerHTML = '<option value="">Todos los cuarteles</option>';
   for (var j = 0; j < cuartelesData.length; j++) {
     var o = document.createElement('option');
     o.value = String(cuartelesData[j].n);
     o.textContent = 'Cuartel ' + cuartelesData[j].n;
     filtroCuartel.appendChild(o);
   }
+  filtroCuartel.value = actual;
 }
 
 window.limpiarFiltros = function() {
@@ -2751,6 +2819,150 @@ var cuartelesData = [
   { n: 12, especie: 'Nogal', variedad: 'Chandler', superficie: 3, ano: 2012, marco: '7,0 x 6,0', plantas: 714 }
 ];
 
+/* ---------- CUARTELES: CACHE LOCAL + NUBE ---------- */
+var CUARTELES_KEY = 'cuarteles_cache';
+
+(function cargarCuartelesCache() {
+  try {
+    var raw = localStorage.getItem(CUARTELES_KEY);
+    if (raw) {
+      var arr = JSON.parse(raw);
+      if (Array.isArray(arr) && arr.length) cuartelesData = arr;
+    }
+  } catch(e) {}
+})();
+
+async function cargarCuartelesNube() {
+  try {
+    var rows = await sbFetch('cuarteles?select=*&order=n.asc');
+    if (rows && rows.length) {
+      cuartelesData = rows.map(function(r) {
+        return { cloud_id: r.id, n: r.n, especie: r.especie || '', variedad: r.variedad || '', superficie: r.superficie != null ? Number(r.superficie) : null, ano: r.ano, marco: r.marco || '', plantas: r.plantas };
+      });
+      localStorage.setItem(CUARTELES_KEY, JSON.stringify(cuartelesData));
+      renderCuarteles();
+      renderSelectorCuarteles();
+      poblarFiltroCuarteles();
+      renderEditorCuarteles();
+    }
+  } catch(e) {}
+}
+
+/* ---------- CUARTELES: EDITOR (Mantenedores) ---------- */
+var editandoCuartelN = null;
+
+function renderEditorCuarteles() {
+  var list = document.getElementById('editorCuartelesList');
+  if (!list) return;
+  var html = '';
+  for (var i = 0; i < cuartelesData.length; i++) {
+    var q = cuartelesData[i];
+    var est = especieEstilo[q.especie] || especieEstilo['Sin plantaci\u00f3n'];
+    html += '<div class="list-item">';
+    html += '<span class="rec-icon" style="font-size:1.1rem;margin-right:2px;">' + est.icono + '</span>';
+    html += '<span class="name">Cuartel ' + q.n + ' <span style="color:var(--text-muted);font-weight:400;font-size:0.72rem;">\u00b7 ' + escaparHtml(q.especie) + (q.variedad ? ' ' + escaparHtml(q.variedad) : '') + (q.superficie != null ? ' \u00b7 ' + fmtCL(q.superficie, 1) + ' ha' : '') + '</span></span>';
+    if (esAdmin()) {
+      html += '<span style="white-space:nowrap;">';
+      html += '<button class="btn-del" style="color:var(--fern);" onclick="abrirFormCuartel(' + q.n + ')">&#x270F; Editar</button>';
+      html += '<button class="btn-del" onclick="eliminarCuartel(' + q.n + ')">&#x1F5D1;</button>';
+      html += '</span>';
+    }
+    html += '</div>';
+  }
+  list.innerHTML = html;
+}
+
+window.abrirFormCuartel = function(n) {
+  if (!esAdmin()) { mostrarToast('Solo admin puede modificar cuarteles'); return; }
+  editandoCuartelN = (n != null ? n : null);
+  var card = document.getElementById('formCuartelCard');
+  if (n != null) {
+    var q = buscarCuartel(n);
+    document.getElementById('formCuartelTitulo').textContent = 'Editar Cuartel ' + n;
+    document.getElementById('cfN').value = q.n;
+    document.getElementById('cfN').disabled = true;
+    setSelectValue(document.getElementById('cfEspecie'), q.especie || 'Sin plantaci\u00f3n');
+    document.getElementById('cfVariedad').value = q.variedad || '';
+    document.getElementById('cfSuperficie').value = q.superficie != null ? String(q.superficie).replace('.', ',') : '';
+    document.getElementById('cfAno').value = q.ano || '';
+    document.getElementById('cfMarco').value = q.marco || '';
+    document.getElementById('cfPlantas').value = q.plantas != null ? q.plantas : '';
+  } else {
+    document.getElementById('formCuartelTitulo').textContent = 'Nuevo cuartel';
+    document.getElementById('cfN').disabled = false;
+    var ids = ['cfN', 'cfVariedad', 'cfSuperficie', 'cfAno', 'cfMarco', 'cfPlantas'];
+    for (var i = 0; i < ids.length; i++) document.getElementById(ids[i]).value = '';
+    document.getElementById('cfEspecie').value = 'Uva';
+  }
+  card.classList.remove('is-hidden');
+  card.scrollIntoView({ behavior: 'smooth' });
+};
+
+window.cerrarFormCuartel = function() {
+  document.getElementById('formCuartelCard').classList.add('is-hidden');
+  editandoCuartelN = null;
+};
+
+window.guardarCuartel = async function() {
+  var n = parseInt(document.getElementById('cfN').value, 10);
+  if (isNaN(n) || n < 1) { mostrarAlerta('alertEditorCuarteles', 'error', 'Ingrese un N\u00b0 de cuartel v\u00e1lido.'); return; }
+  var especie = document.getElementById('cfEspecie').value;
+  var variedad = document.getElementById('cfVariedad').value.trim();
+  var superficie = parseNum(document.getElementById('cfSuperficie').value);
+  var ano = parseInt(document.getElementById('cfAno').value, 10);
+  var marco = document.getElementById('cfMarco').value.trim();
+  var plantas = parseInt(document.getElementById('cfPlantas').value, 10);
+
+  if (editandoCuartelN == null) {
+    for (var i = 0; i < cuartelesData.length; i++) {
+      if (cuartelesData[i].n === n) { mostrarAlerta('alertEditorCuarteles', 'error', 'Ya existe el Cuartel ' + n + '.'); return; }
+    }
+  }
+  if (!sesion || !navigator.onLine) { mostrarAlerta('alertEditorCuarteles', 'error', 'Se requiere conexi\u00f3n para modificar cuarteles.'); return; }
+
+  var obj = {
+    n: n,
+    especie: especie,
+    variedad: variedad,
+    superficie: isNaN(superficie) ? null : superficie,
+    ano: isNaN(ano) ? null : ano,
+    marco: marco,
+    plantas: isNaN(plantas) ? null : plantas
+  };
+  try {
+    var existente = editandoCuartelN != null ? buscarCuartel(editandoCuartelN) : null;
+    if (existente && existente.cloud_id) {
+      await sbFetch('cuarteles?id=eq.' + existente.cloud_id, { method: 'PATCH', body: obj });
+    } else if (existente) {
+      var rows = await sbFetch('cuarteles?n=eq.' + editandoCuartelN + '&select=id');
+      if (rows && rows[0]) {
+        await sbFetch('cuarteles?id=eq.' + rows[0].id, { method: 'PATCH', body: obj });
+      } else {
+        await sbFetch('cuarteles', { method: 'POST', body: obj });
+      }
+    } else {
+      await sbFetch('cuarteles', { method: 'POST', body: obj });
+    }
+    await cargarCuartelesNube();
+    cerrarFormCuartel();
+    mostrarToast('Cuartel guardado');
+  } catch(e) {
+    mostrarAlerta('alertEditorCuarteles', 'error', 'Error al guardar en la nube. Intente nuevamente.');
+  }
+};
+
+window.eliminarCuartel = function(n) {
+  if (!esAdmin()) { mostrarToast('Solo admin puede eliminar cuarteles'); return; }
+  abrirModal('Eliminar Cuartel', '\u00bfEliminar el Cuartel ' + n + '? Los registros existentes de ese cuartel no se borran.', async function() {
+    if (!sesion || !navigator.onLine) { mostrarToast('Se requiere conexi\u00f3n'); return; }
+    try {
+      await sbFetch('cuarteles?n=eq.' + n, { method: 'DELETE' });
+      await cargarCuartelesNube();
+      mostrarToast('Cuartel eliminado');
+    } catch(e) { mostrarToast('Error al eliminar'); }
+  });
+};
+
 var especieEstilo = {
   'Uva': { clase: 'esp-uva', icono: '\uD83C\uDF47' },
   'Nogal': { clase: 'esp-nogal', icono: '\uD83C\uDF30' },
@@ -2777,9 +2989,9 @@ function renderCuarteles() {
   var maxSup = 0;
   for (var i = 0; i < cuartelesData.length; i++) {
     var c = cuartelesData[i];
-    totalSup += c.superficie;
+    totalSup += c.superficie || 0;
     if (c.plantas) totalPlantas += c.plantas;
-    if (c.superficie > maxSup) maxSup = c.superficie;
+    if (c.superficie && c.superficie > maxSup) maxSup = c.superficie;
     if (especies.indexOf(c.especie) === -1) especies.push(c.especie);
     if (c.especie !== 'Sin plantaci\u00f3n' && especiesReales.indexOf(c.especie) === -1) especiesReales.push(c.especie);
   }
@@ -2811,7 +3023,7 @@ function renderCuarteles() {
     if (filtroEspecieCuartel !== 'Todas' && q.especie !== filtroEspecieCuartel) continue;
     visibles++;
     var est = especieEstilo[q.especie] || especieEstilo['Sin plantaci\u00f3n'];
-    var pct = Math.round(q.superficie / maxSup * 100);
+    var pct = (q.superficie && maxSup) ? Math.round(q.superficie / maxSup * 100) : 0;
     html += '<div class="cuartel-card ' + est.clase + '">';
     html += '<div class="cc-head">';
     html += '<span class="cc-icon">' + est.icono + '</span>';
@@ -2820,7 +3032,7 @@ function renderCuarteles() {
     html += '<span class="cc-badge">' + escaparHtml(q.especie) + '</span>';
     html += '</div>';
     html += '<div class="cc-stats">';
-    html += '<div class="cc-stat"><div class="k">Superficie</div><div class="n">' + fmtCL(q.superficie, 1) + ' ha</div></div>';
+    html += '<div class="cc-stat"><div class="k">Superficie</div><div class="n">' + (q.superficie != null ? fmtCL(q.superficie, 1) + ' ha' : '-') + '</div></div>';
     html += '<div class="cc-stat"><div class="k">A\u00f1o plantaci\u00f3n</div><div class="n">' + (q.ano || '-') + '</div></div>';
     html += '<div class="cc-stat"><div class="k">Marco plantaci\u00f3n</div><div class="n">' + escaparHtml(q.marco || '-') + '</div></div>';
     html += '<div class="cc-stat"><div class="k">N\u00b0 Plantas</div><div class="n">' + (q.plantas != null ? fmtCL(q.plantas) : '-') + '</div></div>';
@@ -3272,8 +3484,19 @@ renderHistorial();
 renderCuarteles();
 poblarFiltroCuarteles();
 renderSelectorCuarteles();
+renderEditorCuarteles();
 construirMenu();
 iniciarBienvenida();
+
+document.querySelectorAll('#mantChips .chip').forEach(function(b) {
+  b.addEventListener('click', function() {
+    document.querySelectorAll('#mantChips .chip').forEach(function(x) { x.classList.remove('active'); });
+    b.classList.add('active');
+    var t = b.getAttribute('data-mtab');
+    document.getElementById('mtab-usuarios').classList.toggle('is-hidden', t !== 'usuarios');
+    document.getElementById('mtab-cuarteles').classList.toggle('is-hidden', t !== 'cuarteles');
+  });
+});
 
 /* ==================== SESION / ARRANQUE ==================== */
 cargarSesion();
