@@ -1035,6 +1035,14 @@ input[data-autofilled="true"] { background: var(--fern-wash) !important; border-
 .cf-sub { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
 .cf-btns { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
 
+/* ---------- RIEGO: TOGGLE SI/NO Y FERTILIZACION ---------- */
+.seg-toggle { display: flex; border: 1.5px solid var(--border); border-radius: var(--r-sm); overflow: hidden; }
+.seg-btn { flex: 1; padding: 12px; border: none; background: var(--white); font-family: inherit; font-weight: 700; font-size: 0.9rem; color: var(--text-muted); cursor: pointer; transition: all 0.2s var(--ease); }
+.seg-btn.active { background: var(--fern); color: var(--white); }
+.fert-row { background: var(--fern-wash); border: 1px solid var(--border-light); border-radius: var(--r-sm); padding: 10px 12px; margin-bottom: 10px; }
+.fert-row .btn-del-row { align-self: flex-end; margin-bottom: 10px; }
+.form-group input[readonly] { background: var(--fern-wash); border-style: dashed; }
+
 /* ---------- WELCOME ---------- */
 .welcome-hero {
   position: relative;
@@ -1436,6 +1444,107 @@ input[data-autofilled="true"] { background: var(--fern-wash) !important; border-
 </div>
 <!-- FIN PAGE: FITOSANITARIOS -->
 
+<!-- PAGE: RIEGO Y FERTILIZACION -->
+<div class="page" id="page-riego">
+  <main class="main-content">
+
+    <!-- VISTA: SELECTOR DE CUARTELES -->
+    <div id="viewSelectorRiego">
+      <div class="hint-text">Selecciona un cuartel para ver sus riegos o ingresar uno nuevo</div>
+      <div class="sel-grid" id="selGridRiego"></div>
+    </div>
+
+    <!-- VISTA: DETALLE DEL CUARTEL -->
+    <div id="viewRiegoDetalle" class="is-hidden">
+      <button class="back-bar" onclick="volverASelectorRiego()"><span class="bb-arrow">&#x2039;</span> Todos los cuarteles</button>
+      <div class="detalle-head" id="detalleHeadRiego"></div>
+      <button class="btn btn-primary" onclick="iniciarNuevoRiego()">&#x2795; Nuevo Riego</button>
+      <div class="filter-bar" style="margin-top:12px;">
+        <select id="filtroPeriodoRiego" onchange="renderHistorialRiego()"></select>
+      </div>
+      <div id="historialRiego"></div>
+    </div>
+
+    <!-- VISTA: FORMULARIO DE RIEGO -->
+    <div id="viewRiegoForm" class="is-hidden">
+      <button class="back-bar" onclick="volverADetalleRiego()"><span class="bb-arrow">&#x2039;</span> Volver al cuartel</button>
+      <div class="cancel-edit-bar" id="cancelEditBarRiego">
+        <span>Editando riego existente</span>
+        <button class="btn btn-sm btn-ghost" onclick="volverADetalleRiego()">Cancelar edici&oacute;n</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">&#x1F4A7; Datos del Riego</div>
+        <div class="form-cuartel-banner" id="riegoCuartelBanner"></div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="riegoFecha">Fecha</label>
+            <input type="date" id="riegoFecha">
+          </div>
+          <div class="form-group">
+            <label for="riegoHora">Hora</label>
+            <input type="time" id="riegoHora">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="riegoEspecie">Especie (auto)</label>
+            <input type="text" id="riegoEspecie" readonly tabindex="-1">
+          </div>
+          <div class="form-group">
+            <label for="riegoVariedad">Variedad (auto)</label>
+            <input type="text" id="riegoVariedad" readonly tabindex="-1">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="riegoEstado">Estado Fenol&oacute;gico</label>
+            <select id="riegoEstado"></select>
+          </div>
+          <div class="form-group">
+            <label for="riegoResponsable">Responsable</label>
+            <input type="text" id="riegoResponsable" list="responsablesDatalist" placeholder="Responsable..." autocomplete="off">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="riegoTiempo">Tiempo de riego (Hr)</label>
+            <input type="text" id="riegoTiempo" inputmode="decimal" placeholder="Ej: 2,5">
+          </div>
+          <div class="form-group">
+            <label for="riegoPrecip">Precipitaci&oacute;n (mm/hr)</label>
+            <input type="text" id="riegoPrecip" inputmode="decimal" placeholder="Ej: 8">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">&#x1F9EA; &iquest;Con Fertilizaci&oacute;n?</div>
+        <div class="seg-toggle">
+          <button type="button" id="fertNo" class="seg-btn active" onclick="setFertilizacion(false)">NO</button>
+          <button type="button" id="fertSi" class="seg-btn" onclick="setFertilizacion(true)">S&Iacute;</button>
+        </div>
+        <div id="fertBloque" class="is-hidden" style="margin-top:12px;">
+          <div id="fertFilas"></div>
+          <button type="button" class="btn btn-add" onclick="agregarFilaFert()">+ Agregar producto</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="form-group">
+          <label for="riegoComentarios">&#x1F4AC; Comentarios</label>
+          <textarea id="riegoComentarios" placeholder="Notas u observaciones del riego..."></textarea>
+        </div>
+      </div>
+
+      <div id="alertRiego" class="alert"></div>
+      <button class="btn btn-primary" id="btnGuardarRiego" onclick="guardarRiego()">&#x1F4BE; Guardar Riego</button>
+    </div>
+
+  </main>
+</div>
+<!-- FIN PAGE: RIEGO -->
+
 <!-- PAGE: DESCARGAS -->
 <div class="page" id="page-descargas">
   <div class="cuarteles-wrap" id="descargasWrap"></div>
@@ -1447,6 +1556,7 @@ input[data-autofilled="true"] { background: var(--fern-wash) !important; border-
     <div class="chips-row" id="mantChips">
       <button class="chip active" data-mtab="usuarios">&#x1F465; Usuarios</button>
       <button class="chip" data-mtab="cuarteles">&#x1F5FA;&#xFE0F; Cuarteles</button>
+      <button class="chip" data-mtab="fertilizantes">&#x1F9EA; Fertilizantes</button>
     </div>
 
     <div id="mtab-usuarios">
@@ -1456,6 +1566,19 @@ input[data-autofilled="true"] { background: var(--fern-wash) !important; border-
         <div class="hint-text" style="padding:10px 4px 2px;text-align:left;">Para agregar usuarios o cambiar contrase&ntilde;as se usa el panel de Supabase (Authentication &rsaquo; Users). Av&iacute;same y te ayudo.</div>
       </div>
       <div id="alertResponsables" class="alert"></div>
+    </div>
+
+    <div id="mtab-fertilizantes" class="is-hidden">
+      <div class="card">
+        <div class="card-title">&#x1F9EA; Productos de Fertilizaci&oacute;n</div>
+        <div id="fertilizantesList"></div>
+        <div class="add-user-row">
+          <input type="text" id="nuevoFertilizante" placeholder="Nombre del producto...">
+          <button class="btn btn-primary btn-sm" onclick="agregarFertilizante()">Agregar</button>
+        </div>
+        <div class="hint-text" style="padding:10px 4px 2px;text-align:left;">Esta lista alimenta la casilla &quot;Producto comercial&quot; del m&oacute;dulo Riego y Fertilizaci&oacute;n.</div>
+      </div>
+      <div id="alertFertilizantes" class="alert"></div>
     </div>
 
     <div id="mtab-cuarteles" class="is-hidden">
@@ -1896,17 +2019,26 @@ async function procesarOutbox() {
     var op = ops[i];
     try {
       if (op.tipo === 'upsert') {
-        var reg = null;
-        for (var j = 0; j < data.registros.length; j++) {
-          if (String(data.registros[j].id) === String(op.localId)) { reg = data.registros[j]; break; }
+        if (op.tabla === 'riegos') {
+          var rgr = null;
+          for (var w = 0; w < riegosData.length; w++) {
+            if (String(riegosData[w].id) === String(op.localId)) { rgr = riegosData[w]; break; }
+          }
+          if (rgr) await pushRiego(rgr);
+        } else {
+          var reg = null;
+          for (var j = 0; j < data.registros.length; j++) {
+            if (String(data.registros[j].id) === String(op.localId)) { reg = data.registros[j]; break; }
+          }
+          if (reg) await pushRegistro(reg);
         }
-        if (reg) await pushRegistro(reg);
       } else if (op.tipo === 'delete') {
         await sbFetch('registros?id=eq.' + op.cloudId, { method: 'DELETE' });
       }
     } catch(e) { fallan.push(op); }
   }
   guardarDatos(data);
+  guardarRiegos();
   guardarOutbox(fallan);
 }
 
@@ -2005,10 +2137,18 @@ async function bajarRegistros() {
 var conflictosPendientes = [];
 
 function mostrarConflictos(lista) {
-  conflictosPendientes = lista;
+  for (var i = 0; i < lista.length; i++) {
+    var c = lista[i];
+    var existe = false;
+    for (var j = 0; j < conflictosPendientes.length; j++) {
+      if (conflictosPendientes[j].tabla === (c.tabla || 'registros') &&
+          String(conflictosPendientes[j].local.id) === String(c.local.id)) { existe = true; break; }
+    }
+    if (!existe) conflictosPendientes.push(c);
+  }
   renderConflictos();
   document.getElementById('conflictoOverlay').classList.add('open');
-  mostrarToast('\u26a0\ufe0f ' + lista.length + ' conflicto(s) de sincronizaci\u00f3n \u2014 revisar');
+  mostrarToast('\u26a0\ufe0f ' + conflictosPendientes.length + ' conflicto(s) de sincronizaci\u00f3n \u2014 revisar');
 }
 
 function renderConflictos() {
@@ -2020,7 +2160,7 @@ function renderConflictos() {
     var c = conflictosPendientes[i];
     var f = String(c.local.fecha || '').split('-').reverse().join('/');
     html += '<div class="conflicto-row">';
-    html += '<div class="cf-info"><b>' + escaparHtml(f) + ' \u00b7 Cuartel ' + escaparHtml(c.local.cuartel) + '</b>';
+    html += '<div class="cf-info"><b>' + (c.tabla === 'riegos' ? '\uD83D\uDCA7 Riego \u00b7 ' : '\uD83E\uDDEA Aplicaci\u00f3n \u00b7 ') + escaparHtml(f) + ' \u00b7 Cuartel ' + escaparHtml(c.local.cuartel) + '</b>';
     html += '<div class="cf-sub">' + (c.nube ? 'Cambiado en ambos lados' : 'Eliminado en la nube; tienes cambios locales') + '</div></div>';
     html += '<div class="cf-btns">';
     html += '<button class="btn btn-sm btn-outline" onclick="resolverConflicto(' + i + ', true)">Usar la m\u00eda</button>';
@@ -2033,32 +2173,49 @@ function renderConflictos() {
 window.resolverConflicto = async function(idx, usarLocal) {
   var c = conflictosPendientes[idx];
   if (!c) return;
+  var esRiego = c.tabla === 'riegos';
   var data = cargarDatos();
   var reg = null;
-  for (var i = 0; i < data.registros.length; i++) {
-    if (String(data.registros[i].id) === String(c.local.id)) { reg = data.registros[i]; break; }
+  var i;
+  if (esRiego) {
+    for (i = 0; i < riegosData.length; i++) {
+      if (String(riegosData[i].id) === String(c.local.id)) { reg = riegosData[i]; break; }
+    }
+  } else {
+    for (i = 0; i < data.registros.length; i++) {
+      if (String(data.registros[i].id) === String(c.local.id)) { reg = data.registros[i]; break; }
+    }
   }
   try {
     if (usarLocal) {
       if (!reg) throw new Error('sin registro local');
       if (c.nube === null) { reg.cloud_id = null; reg.syncHash = null; } // recrear en la nube
-      await pushRegistro(reg);
+      if (esRiego) await pushRiego(reg); else await pushRegistro(reg);
     } else {
       if (c.nube === null) {
-        data.registros = data.registros.filter(function(r) { return String(r.id) !== String(c.local.id); });
+        if (esRiego) {
+          riegosData = riegosData.filter(function(r) { return String(r.id) !== String(c.local.id); });
+        } else {
+          data.registros = data.registros.filter(function(r) { return String(r.id) !== String(c.local.id); });
+        }
       } else if (reg) {
-        reg.fecha = c.nube.fecha; reg.hora = c.nube.hora; reg.cuartel = c.nube.cuartel;
-        reg.comentarios = c.nube.comentarios; reg.productos = c.nube.productos;
-        reg.user_id = c.nube.user_id;
+        var campos = esRiego
+          ? ['fecha','hora','cuartel','especie','variedad','estadoFenologico','tiempoRiego','precipitacion','fertilizacion','fertilizantes','responsable','comentarios','anulado','user_id','creado_en','modificado_por','modificado_en']
+          : ['fecha','hora','cuartel','comentarios','productos','anulado','user_id','creado_en','modificado_por','modificado_en'];
+        for (var k = 0; k < campos.length; k++) {
+          if (campos[k] in c.nube) reg[campos[k]] = c.nube[campos[k]];
+        }
         reg.syncHash = c.nubeHash;
         reg.conflicto = false;
       }
     }
-    guardarDatos(data);
+    if (esRiego) guardarRiegos(); else guardarDatos(data);
     conflictosPendientes.splice(idx, 1);
     renderConflictos();
     renderHistorialCuartel();
     renderSelectorCuarteles();
+    renderHistorialRiego();
+    renderSelectorRiego();
     mostrarToast('Conflicto resuelto');
   } catch(e) {
     mostrarToast('No se pudo aplicar \u2014 revise conexi\u00f3n');
@@ -2112,8 +2269,12 @@ async function sincronizarNube() {
     var subidos = await subirPendientes();
     await cargarPerfilesNube();
     await cargarCuartelesNube();
+    await cargarFertilizantesNube();
+    await cargarRiegosNube();
     renderHistorialCuartel();
     renderSelectorCuarteles();
+    renderHistorialRiego();
+    renderSelectorRiego();
     if (subidos > 0) mostrarToast('Sincronizado: ' + subidos + ' registro(s) respaldados en la nube');
   } catch(e) {
     if (String(e && e.message).indexOf('sesion expirada') !== -1) {
@@ -3265,11 +3426,24 @@ function renderDashboard() {
     '<div class="ch-stat"><div class="v">' + fmtCL(totalLitros, 1) + '</div><div class="l">Litros apl.</div></div>' +
     '<div class="ch-stat"><div class="v">' + Object.keys(cuartelesSet).length + '</div><div class="l">Cuarteles</div></div>';
 
+  var nRiegos = 0, totalHoras = 0, totalMm = 0;
+  for (var z = 0; z < riegosData.length; z++) {
+    var rg = riegosData[z];
+    if (rg.anulado) continue;
+    nRiegos++;
+    var hrs = parseNum(rg.tiempoRiego);
+    var mmh = parseNum(rg.precipitacion);
+    if (!isNaN(hrs)) totalHoras += hrs;
+    if (!isNaN(hrs) && !isNaN(mmh)) totalMm += hrs * mmh;
+  }
+  totalHoras = Math.round(totalHoras * 10) / 10;
+  totalMm = Math.round(totalMm * 10) / 10;
+
   var html = '<div class="sec-title">Rendimiento por m\u00f3dulo</div>';
   html += '<div class="mod-grid">';
   var mods = [
     { icono: '\uD83E\uDDEA', titulo: 'Fitosanitarios', valor: totalRegs, sub: 'aplicaciones', extra: fmtCL(totalLitros, 1) + ' L aplicados' },
-    { icono: '\uD83D\uDCA7', titulo: 'Riego y Fert.', valor: null },
+    { icono: '\uD83D\uDCA7', titulo: 'Riego y Fert.', valor: nRiegos, sub: 'riegos', extra: fmtCL(totalHoras, 1) + ' hrs \u00b7 ' + fmtCL(totalMm, 1) + ' mm' },
     { icono: '\uD83D\uDCE6', titulo: 'Inventario', valor: null },
     { icono: '\uD83C\uDF30', titulo: 'Lab. Nogal', valor: null },
     { icono: '\uD83C\uDF47', titulo: 'Lab. Uva', valor: null },
@@ -3369,9 +3543,16 @@ function renderDescargas() {
   for (var i = 0; i < data.registros.length; i++) {
     if (String(data.registros[i].fecha || '') > ultima) ultima = data.registros[i].fecha;
   }
+  var nR = 0;
+  var ultR = '';
+  for (var z2 = 0; z2 < riegosData.length; z2++) {
+    if (riegosData[z2].anulado) continue;
+    nR++;
+    if (String(riegosData[z2].fecha || '') > ultR) ultR = riegosData[z2].fecha;
+  }
   var mods = [
     { icono: '\uD83E\uDDEA', titulo: 'Aplicaciones Fitosanitarias', n: n, ultima: ultima },
-    { icono: '\uD83D\uDCA7', titulo: 'Riego y Fertilizaci\u00f3n', n: 0 },
+    { icono: '\uD83D\uDCA7', titulo: 'Riego y Fertilizaci\u00f3n', n: nR, ultima: ultR, csv: 'riego' },
     { icono: '\uD83D\uDCE6', titulo: 'Inventario Bodega', n: 0 },
     { icono: '\uD83C\uDF30', titulo: 'Labores Nogal', n: 0 },
     { icono: '\uD83C\uDF47', titulo: 'Labores Uva', n: 0 },
@@ -3396,7 +3577,7 @@ function renderDescargas() {
     html += '<div class="dl-info"><div class="dl-title">' + mo.titulo + '</div>';
     html += '<div class="dl-meta">' + (activo ? (mo.n + ' registro' + (mo.n !== 1 ? 's' : '') + (mo.ultima ? ' \u00b7 \u00faltima: ' + String(mo.ultima).split('-').reverse().join('/') : '')) : 'Sin registros \u2014 m\u00f3dulo en construcci\u00f3n') + '</div></div>';
     if (activo) {
-      html += '<button class="btn btn-outline btn-sm" onclick="exportarCSV()">&#x1F4E5; CSV</button>';
+      html += '<button class="btn btn-outline btn-sm" onclick="' + (mo.csv === 'riego' ? 'exportarCSVRiego()' : 'exportarCSV()') + '">&#x1F4E5; CSV</button>';
     } else {
       html += '<button class="btn btn-outline btn-sm" disabled>CSV</button>';
     }
@@ -3405,10 +3586,695 @@ function renderDescargas() {
   wrap.innerHTML = html;
 }
 
+/* ==================== RIEGO Y FERTILIZACION ==================== */
+var RIEGOS_KEY = 'riegos_cache';
+var FERT_KEY = 'fertilizantes_cache';
+var riegosData = [];
+var cuartelActivoRiego = null;
+var editandoRiegoId = null;
+var fertSiONo = false;
+
+var fertilizantesData = ['Urea', 'Nitrato Calcio', 'Nitrato Potasio', 'Cloruro Potasio', 'Sulfato Potasio', 'Acido Fosf\u00f3rico', 'Fosfato Monoam\u00f3nico', 'Fosfato Diam\u00f3nico', 'Sulfato Magnesio', 'Novatec 21', 'Maguey', 'Bioaminol', 'Pilatus', 'Acido F\u00falvico', 'Acido H\u00famico'];
+
+(function cargarCachesRiego() {
+  try {
+    var raw = localStorage.getItem(RIEGOS_KEY);
+    if (raw) { var a = JSON.parse(raw); if (Array.isArray(a)) riegosData = a; }
+    var rf = localStorage.getItem(FERT_KEY);
+    if (rf) { var b = JSON.parse(rf); if (Array.isArray(b) && b.length) fertilizantesData = b; }
+  } catch(e) {}
+})();
+
+function guardarRiegos() {
+  try { localStorage.setItem(RIEGOS_KEY, JSON.stringify(riegosData)); return true; }
+  catch(e) { mostrarToast('Error al guardar riegos'); return false; }
+}
+
+/* ---------- MANTENEDOR FERTILIZANTES ---------- */
+function renderFertilizantes() {
+  var list = document.getElementById('fertilizantesList');
+  if (!list) return;
+  var html = '';
+  for (var i = 0; i < fertilizantesData.length; i++) {
+    html += '<div class="list-item">';
+    html += '<span class="name">' + escaparHtml(fertilizantesData[i]) + '</span>';
+    if (esAdmin()) {
+      html += '<button class="btn-del" data-nom="' + escaparAttr(fertilizantesData[i]) + '">&#x1F5D1; Eliminar</button>';
+    }
+    html += '</div>';
+  }
+  if (!fertilizantesData.length) html = '<div style="padding:12px 0;color:var(--text-muted);font-size:0.85rem;">Sin productos \u2014 con\u00e9ctate para cargar la lista.</div>';
+  list.innerHTML = html;
+  list.querySelectorAll('.btn-del').forEach(function(btn) {
+    btn.addEventListener('click', function() { eliminarFertilizante(btn.getAttribute('data-nom')); });
+  });
+}
+
+async function cargarFertilizantesNube() {
+  try {
+    var rows = await sbFetch('fertilizantes?select=nombre&order=nombre.asc');
+    if (rows && rows.length) {
+      fertilizantesData = rows.map(function(r) { return r.nombre; });
+      localStorage.setItem(FERT_KEY, JSON.stringify(fertilizantesData));
+      renderFertilizantes();
+    }
+  } catch(e) {}
+}
+
+window.agregarFertilizante = async function() {
+  var input = document.getElementById('nuevoFertilizante');
+  var nombre = input.value.trim();
+  if (!nombre) { mostrarAlerta('alertFertilizantes', 'error', 'Ingrese un nombre.'); return; }
+  if (!esAdmin()) { mostrarToast('Solo admin puede modificar fertilizantes'); return; }
+  var existe = fertilizantesData.some(function(n) { return n.toLowerCase() === nombre.toLowerCase(); });
+  if (existe) { mostrarAlerta('alertFertilizantes', 'error', 'Ese producto ya existe.'); return; }
+  if (!sesion || !navigator.onLine) { mostrarAlerta('alertFertilizantes', 'error', 'Se requiere conexi\u00f3n.'); return; }
+  try {
+    await sbFetch('fertilizantes', { method: 'POST', body: { nombre: nombre } });
+    input.value = '';
+    await cargarFertilizantesNube();
+    mostrarToast('Producto agregado');
+  } catch(e) { mostrarAlerta('alertFertilizantes', 'error', 'Error al guardar en la nube.'); }
+};
+
+window.eliminarFertilizante = function(nombre) {
+  if (!esAdmin()) { mostrarToast('Solo admin puede eliminar'); return; }
+  abrirModal('Eliminar Producto', '\u00bfEliminar "' + nombre + '" de la lista? Los riegos ya registrados no se modifican.', async function() {
+    if (!sesion || !navigator.onLine) { mostrarToast('Se requiere conexi\u00f3n'); return; }
+    try {
+      await sbFetch('fertilizantes?nombre=eq.' + encodeURIComponent(nombre), { method: 'DELETE' });
+      await cargarFertilizantesNube();
+      mostrarToast('Producto eliminado');
+    } catch(e) { mostrarToast('Error al eliminar'); }
+  }, 'Eliminar');
+};
+
+/* ---------- RIEGO: NAVEGACION DE VISTAS ---------- */
+function mostrarVistaRiego(vista) {
+  document.getElementById('viewSelectorRiego').classList.toggle('is-hidden', vista !== 'selector');
+  document.getElementById('viewRiegoDetalle').classList.toggle('is-hidden', vista !== 'detalle');
+  document.getElementById('viewRiegoForm').classList.toggle('is-hidden', vista !== 'form');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+window.renderSelectorRiego = function() {
+  var grid = document.getElementById('selGridRiego');
+  if (!grid) return;
+  var conteos = {};
+  for (var i = 0; i < riegosData.length; i++) {
+    if (riegosData[i].anulado) continue;
+    var c = riegosData[i].cuartel;
+    conteos[c] = (conteos[c] || 0) + 1;
+  }
+  var html = '';
+  for (var j = 0; j < cuartelesData.length; j++) {
+    var q = cuartelesData[j];
+    var est = especieEstilo[q.especie] || especieEstilo['Sin plantaci\u00f3n'];
+    var nReg = conteos[q.n] || 0;
+    html += '<button class="cuartel-tile ' + est.clase + '" onclick="abrirCuartelRiego(' + q.n + ')">';
+    html += '<div class="ct-icon">' + est.icono + '</div>';
+    html += '<div class="ct-num">Cuartel ' + q.n + '</div>';
+    html += '<div class="ct-var">' + escaparHtml(q.variedad || 'Sin plantaci\u00f3n') + '</div>';
+    html += '<span class="ct-count">' + nReg + ' riego' + (nReg !== 1 ? 's' : '') + '</span>';
+    html += '</button>';
+  }
+  grid.innerHTML = html;
+};
+
+function detalleHeadHtmlRiego(q) {
+  var est = especieEstilo[q.especie] || especieEstilo['Sin plantaci\u00f3n'];
+  var html = '<div class="dh-top">';
+  html += '<span class="dh-icon">' + est.icono + '</span>';
+  html += '<div><div class="dh-name">Cuartel ' + q.n + '</div>';
+  html += '<div class="dh-sub">' + escaparHtml(q.especie) + (q.variedad ? ' \u00b7 ' + escaparHtml(q.variedad) : '') + '</div></div>';
+  html += '</div>';
+  if (q.superficie) {
+    html += '<div class="dh-stats">';
+    html += '<span>Superficie <b>' + fmtCL(q.superficie, 1) + ' ha</b></span>';
+    if (q.ano) html += '<span>A\u00f1o <b>' + q.ano + '</b></span>';
+    if (q.marco) html += '<span>Marco <b>' + escaparHtml(q.marco) + '</b></span>';
+    if (q.plantas != null) html += '<span>Plantas <b>' + fmtCL(q.plantas) + '</b></span>';
+    html += '</div>';
+  }
+  return html;
+}
+
+window.abrirCuartelRiego = function(n) {
+  cuartelActivoRiego = n;
+  var q = buscarCuartel(n);
+  var est = especieEstilo[q.especie] || especieEstilo['Sin plantaci\u00f3n'];
+  var head = document.getElementById('detalleHeadRiego');
+  head.className = 'detalle-head ' + est.clase;
+  head.innerHTML = detalleHeadHtmlRiego(q);
+  renderHistorialRiego();
+  mostrarVistaRiego('detalle');
+};
+
+window.volverASelectorRiego = function() {
+  cancelarEdicionRiego();
+  renderSelectorRiego();
+  mostrarVistaRiego('selector');
+};
+
+window.volverADetalleRiego = function() {
+  cancelarEdicionRiego();
+  abrirCuartelRiego(cuartelActivoRiego);
+};
+
+function cancelarEdicionRiego() {
+  editandoRiegoId = null;
+  document.getElementById('cancelEditBarRiego').classList.remove('visible');
+  document.getElementById('btnGuardarRiego').textContent = '\uD83D\uDCBE Guardar Riego';
+  document.getElementById('alertRiego').classList.remove('visible');
+}
+
+/* ---------- RIEGO: FORMULARIO ---------- */
+function actualizarBannerRiego() {
+  var q = buscarCuartel(cuartelActivoRiego);
+  var est = especieEstilo[q.especie] || especieEstilo['Sin plantaci\u00f3n'];
+  document.getElementById('riegoCuartelBanner').innerHTML =
+    '<span class="fcb-icon">' + est.icono + '</span>' +
+    '<div><div class="fcb-name">Cuartel ' + q.n + '</div>' +
+    '<div class="fcb-sub">' + escaparHtml(q.especie) + (q.variedad ? ' \u00b7 ' + escaparHtml(q.variedad) : '') + (q.superficie ? ' \u00b7 ' + fmtCL(q.superficie, 1) + ' ha' : '') + '</div></div>' +
+    '<button type="button" class="btn btn-sm btn-ghost fcb-cambiar" onclick="volverADetalleRiego()">Cambiar</button>';
+  document.getElementById('riegoEspecie').value = q.especie || '';
+  document.getElementById('riegoVariedad').value = q.variedad || '';
+}
+
+window.setFertilizacion = function(val) {
+  fertSiONo = val;
+  document.getElementById('fertSi').classList.toggle('active', val);
+  document.getElementById('fertNo').classList.toggle('active', !val);
+  document.getElementById('fertBloque').classList.toggle('is-hidden', !val);
+  if (val && document.getElementById('fertFilas').children.length === 0) agregarFilaFert();
+};
+
+function recalcFertHa(div) {
+  var q = buscarCuartel(cuartelActivoRiego);
+  var cant = parseNum(div.querySelector('.ff-cantidad').value);
+  var ha = q && q.superficie ? Number(q.superficie) : NaN;
+  if (isNaN(cant) || isNaN(ha) || ha === 0) return;
+  div.querySelector('.ff-canha').value = parseFloat((cant / ha).toFixed(3));
+}
+
+window.agregarFilaFert = function(datos) {
+  datos = datos || {};
+  var cont = document.getElementById('fertFilas');
+  var div = document.createElement('div');
+  div.className = 'fert-row';
+  div.innerHTML =
+    '<div class="form-row" style="align-items:flex-end;">' +
+      '<div class="form-group"><label>Producto comercial</label><select class="ff-producto">' + opcionesHtml(fertilizantesData) + '</select></div>' +
+      '<button type="button" class="btn-del-row" title="Quitar producto">&times;</button>' +
+    '</div>' +
+    '<div class="form-row">' +
+      '<div class="form-group"><label>Cantidad cuartel (kg o L)</label><input type="text" class="ff-cantidad" inputmode="decimal" placeholder="Ej: 25" value="' + escaparAttr(datos.cantidadCuartel || '') + '"></div>' +
+      '<div class="form-group"><label>Cantidad por Ha (kg o L)</label><input type="text" class="ff-canha" readonly tabindex="-1" placeholder="Auto" value="' + escaparAttr(datos.cantidadHa || '') + '"></div>' +
+      '<div class="form-group"><label>Unidades/Ha</label><input type="text" class="ff-unidades" placeholder="Ej: sacos, bidones" value="' + escaparAttr(datos.unidadesHa || '') + '"></div>' +
+    '</div>';
+  div.querySelector('.btn-del-row').addEventListener('click', function() { div.remove(); });
+  div.querySelector('.ff-cantidad').addEventListener('input', function() { recalcFertHa(div); });
+  setSelectValue(div.querySelector('.ff-producto'), datos.producto);
+  cont.appendChild(div);
+};
+
+window.iniciarNuevoRiego = function() {
+  limpiarFormRiego();
+  mostrarVistaRiego('form');
+};
+
+function limpiarFormRiego() {
+  document.getElementById('riegoFecha').value = fechaHoy();
+  document.getElementById('riegoHora').value = horaAhora();
+  document.getElementById('riegoEstado').value = '';
+  document.getElementById('riegoResponsable').value = '';
+  document.getElementById('riegoTiempo').value = '';
+  document.getElementById('riegoPrecip').value = '';
+  document.getElementById('riegoComentarios').value = '';
+  document.getElementById('fertFilas').innerHTML = '';
+  setFertilizacion(false);
+  document.getElementById('alertRiego').classList.remove('visible');
+  actualizarBannerRiego();
+}
+
+window.guardarRiego = function() {
+  var fecha = document.getElementById('riegoFecha').value;
+  var hora = document.getElementById('riegoHora').value;
+  var estado = document.getElementById('riegoEstado').value;
+  var responsable = document.getElementById('riegoResponsable').value.trim();
+  var tiempo = document.getElementById('riegoTiempo').value.trim();
+  var prec = document.getElementById('riegoPrecip').value.trim();
+  var comentarios = document.getElementById('riegoComentarios').value.trim();
+
+  if (!fecha) { mostrarAlerta('alertRiego', 'error', 'Seleccione una fecha.'); return; }
+  if (cuartelActivoRiego == null) { mostrarAlerta('alertRiego', 'error', 'Seleccione un cuartel.'); return; }
+
+  var ferts = [];
+  if (fertSiONo) {
+    var filas = document.getElementById('fertFilas').children;
+    for (var i = 0; i < filas.length; i++) {
+      var f = {
+        producto: filas[i].querySelector('.ff-producto').value.trim(),
+        cantidadCuartel: filas[i].querySelector('.ff-cantidad').value.trim(),
+        cantidadHa: filas[i].querySelector('.ff-canha').value.trim(),
+        unidadesHa: filas[i].querySelector('.ff-unidades').value.trim()
+      };
+      if (!f.producto && !f.cantidadCuartel) continue;
+      ferts.push(f);
+    }
+    if (ferts.length === 0) { mostrarAlerta('alertRiego', 'error', 'Agregue al menos un producto de fertilizaci\u00f3n o seleccione NO.'); return; }
+  }
+
+  var q = buscarCuartel(cuartelActivoRiego);
+
+  if (editandoRiegoId !== null) {
+    var reg = null;
+    for (var k = 0; k < riegosData.length; k++) {
+      if (String(riegosData[k].id) === String(editandoRiegoId)) { reg = riegosData[k]; break; }
+    }
+    if (reg) {
+      reg.fecha = fecha; reg.hora = hora; reg.cuartel = cuartelActivoRiego;
+      reg.especie = q.especie || ''; reg.variedad = q.variedad || '';
+      reg.estadoFenologico = estado; reg.responsable = responsable;
+      reg.tiempoRiego = tiempo; reg.precipitacion = prec;
+      reg.fertilizacion = fertSiONo; reg.fertilizantes = ferts;
+      reg.comentarios = comentarios;
+      if (!reg.user_id) reg.user_id = sesion ? sesion.userId : null;
+      reg.modificado_por = sesion ? sesion.userId : null;
+      reg.modificado_en = new Date().toISOString();
+      guardarRiegos();
+      mostrarToast('Riego actualizado');
+      cancelarEdicionRiego();
+      abrirCuartelRiego(cuartelActivoRiego);
+      pushRiegoYGuardar(reg);
+    }
+  } else {
+    var nuevo = {
+      id: generarId(),
+      fecha: fecha, hora: hora, cuartel: cuartelActivoRiego,
+      especie: q.especie || '', variedad: q.variedad || '',
+      estadoFenologico: estado, responsable: responsable,
+      tiempoRiego: tiempo, precipitacion: prec,
+      fertilizacion: fertSiONo, fertilizantes: ferts,
+      comentarios: comentarios,
+      user_id: sesion ? sesion.userId : null,
+      anulado: false
+    };
+    riegosData.push(nuevo);
+    guardarRiegos();
+    mostrarToast('Riego guardado');
+    limpiarFormRiego();
+    abrirCuartelRiego(cuartelActivoRiego);
+    pushRiegoYGuardar(nuevo);
+  }
+};
+
+window.editarRiego = function(id) {
+  var reg = null;
+  for (var i = 0; i < riegosData.length; i++) {
+    if (String(riegosData[i].id) === String(id)) { reg = riegosData[i]; break; }
+  }
+  if (!reg) return;
+  editandoRiegoId = reg.id;
+  cuartelActivoRiego = reg.cuartel;
+  limpiarFormRiego();
+  document.getElementById('riegoFecha').value = reg.fecha;
+  document.getElementById('riegoHora').value = reg.hora || horaAhora();
+  setSelectValue(document.getElementById('riegoEstado'), reg.estadoFenologico);
+  document.getElementById('riegoResponsable').value = reg.responsable || '';
+  document.getElementById('riegoTiempo').value = reg.tiempoRiego || '';
+  document.getElementById('riegoPrecip').value = reg.precipitacion || '';
+  document.getElementById('riegoComentarios').value = reg.comentarios || '';
+  setFertilizacion(!!reg.fertilizacion);
+  document.getElementById('fertFilas').innerHTML = '';
+  var ferts = reg.fertilizantes || [];
+  for (var j = 0; j < ferts.length; j++) agregarFilaFert(ferts[j]);
+  document.getElementById('btnGuardarRiego').textContent = '\u2705 Actualizar Riego';
+  document.getElementById('cancelEditBarRiego').classList.add('visible');
+  mostrarVistaRiego('form');
+};
+
+window.duplicarRiego = function(id) {
+  var reg = null;
+  for (var i = 0; i < riegosData.length; i++) {
+    if (String(riegosData[i].id) === String(id)) { reg = riegosData[i]; break; }
+  }
+  if (!reg) return;
+  var copia = JSON.parse(JSON.stringify(reg));
+  editandoRiegoId = null;
+  cuartelActivoRiego = copia.cuartel;
+  limpiarFormRiego();
+  document.getElementById('riegoFecha').value = fechaHoy();
+  document.getElementById('riegoHora').value = horaAhora();
+  setSelectValue(document.getElementById('riegoEstado'), copia.estadoFenologico);
+  document.getElementById('riegoResponsable').value = copia.responsable || '';
+  document.getElementById('riegoTiempo').value = copia.tiempoRiego || '';
+  document.getElementById('riegoPrecip').value = copia.precipitacion || '';
+  document.getElementById('riegoComentarios').value = copia.comentarios || '';
+  setFertilizacion(!!copia.fertilizacion);
+  document.getElementById('fertFilas').innerHTML = '';
+  var ferts = copia.fertilizantes || [];
+  for (var j = 0; j < ferts.length; j++) agregarFilaFert(ferts[j]);
+  mostrarVistaRiego('form');
+  mostrarToast('Riego duplicado \u2014 revise y guarde');
+};
+
+window.anularRiego = function(id) {
+  abrirModal('Anular Riego', '\u00bfAnular este riego? Quedar\u00e1 marcado como ANULADO y se conservar\u00e1 en la base (no se elimina f\u00edsicamente).', function() {
+    var reg = null;
+    for (var i = 0; i < riegosData.length; i++) {
+      if (String(riegosData[i].id) === String(id)) { reg = riegosData[i]; break; }
+    }
+    if (!reg) return;
+    reg.anulado = true;
+    reg.modificado_por = sesion ? sesion.userId : null;
+    reg.modificado_en = new Date().toISOString();
+    guardarRiegos();
+    pushRiegoYGuardar(reg);
+    mostrarToast('Riego anulado');
+    if (String(editandoRiegoId) === String(id)) cancelarEdicionRiego();
+    renderHistorialRiego();
+    renderSelectorRiego();
+  }, 'Anular');
+};
+
+/* ---------- RIEGO: HISTORIAL ---------- */
+function riegoCardHtml(r) {
+  var fechaF = String(r.fecha || '').split('-').reverse().join('/');
+  var qc = buscarCuartel(r.cuartel);
+  var est = especieEstilo[qc.especie] || especieEstilo['Sin plantaci\u00f3n'];
+  var ferts = r.fertilizantes || [];
+  var rid = escaparAttr(r.id);
+
+  var html = '<div class="record-card ' + est.clase + (r.anulado ? ' anulado' : '') + '">';
+  html += '<div class="record-header" onclick="toggleRecordBody(this)">';
+  html += '<span class="rec-icon">\uD83D\uDCA7</span>';
+  html += '<div class="record-info">';
+  html += '<div class="record-date">\uD83D\uDCC5 ' + fechaF + (r.hora ? ' <span class="rec-hora">\u00b7 \uD83D\uDD52 ' + escaparHtml(r.hora) + '</span>' : '') + '</div>';
+  html += '<div class="record-meta">Cuartel ' + escaparHtml(r.cuartel) + (r.variedad ? ' \u00b7 ' + escaparHtml(r.variedad) : '') + '</div>';
+  if (r.responsable) html += '<div class="record-meta">\uD83D\uDC64 ' + escaparHtml(r.responsable) + '</div>';
+  html += '</div>';
+  if (r.anulado) {
+    html += '<span class="record-badge badge-anulado">ANULADO</span>';
+  } else if (r.fertilizacion) {
+    html += '<span class="record-badge" style="background:var(--marigold-pale);color:var(--marigold-dark);">FERT.</span>';
+  } else {
+    html += '<span class="record-badge">\uD83D\uDCA7</span>';
+  }
+  html += '</div>';
+
+  html += '<div class="record-body">';
+  html += '<div class="prod-card"><div class="pc-grid">';
+  html += pcDato('Tiempo (Hr)', r.tiempoRiego);
+  html += pcDato('Precipitaci\u00f3n (mm/hr)', r.precipitacion);
+  html += pcDato('Estado Fenol\u00f3gico', r.estadoFenologico);
+  html += pcDato('Fertilizaci\u00f3n', r.fertilizacion ? 'S\u00ed' : 'No');
+  html += '</div></div>';
+
+  if (r.fertilizacion && ferts.length) {
+    for (var j = 0; j < ferts.length; j++) {
+      var f = ferts[j];
+      html += '<div class="prod-card">';
+      html += '<div class="pc-head"><span class="pc-name">' + escaparHtml(f.producto || '-') + '</span><span class="pc-tipo">Fertilizante</span></div>';
+      html += '<div class="pc-grid">';
+      html += pcDato('Cantidad cuartel (kg o L)', f.cantidadCuartel);
+      html += pcDato('Cantidad por Ha (kg o L)', f.cantidadHa);
+      html += pcDato('Unidades/Ha', f.unidadesHa);
+      html += '</div></div>';
+    }
+  } else if (r.fertilizacion) {
+    html += '<div class="hint-text" style="text-align:left;padding:4px 2px;">Con fertilizaci\u00f3n (sin productos detallados)</div>';
+  }
+
+  if (r.comentarios) {
+    html += '<div class="comment-row"><strong>Comentarios:</strong> ' + escaparHtml(r.comentarios) + '</div>';
+  }
+
+  var ingNombre = nombreUsuario(r.user_id);
+  if (ingNombre || r.creado_en) {
+    html += '<div class="comment-row" style="font-style:normal;">\uD83D\uDCDD Ingresado por <b>' + escaparHtml(ingNombre || 'usuario') + '</b>' + (r.creado_en ? ' \u00b7 ' + escaparHtml(String(r.creado_en).slice(0, 10).split('-').reverse().join('/')) : '') + '</div>';
+  }
+
+  if (!r.anulado) {
+    var puedeEditar = true;
+    var puedeAnular = true;
+    if (sesion && !esAdmin()) {
+      puedeAnular = false;
+      puedeEditar = !r.user_id || String(r.user_id) === String(sesion.userId);
+    }
+    html += '<div class="record-actions">';
+    if (puedeEditar) html += '<button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); editarRiego(\'' + rid + '\')">&#x270F; Editar</button>';
+    html += '<button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); duplicarRiego(\'' + rid + '\')">&#x2398; Duplicar</button>';
+    if (puedeAnular) html += '<button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); anularRiego(\'' + rid + '\')">&#x26D4; Anular</button>';
+    html += '</div>';
+  }
+  html += '</div></div>';
+  return html;
+}
+
+function poblarFiltroPeriodoRiego(registros) {
+  var sel = document.getElementById('filtroPeriodoRiego');
+  if (!sel) return;
+  var actual = sel.value;
+  var meses = [];
+  for (var i = 0; i < registros.length; i++) {
+    var m = String(registros[i].fecha || '').slice(0, 7);
+    if (m.length === 7 && meses.indexOf(m) === -1) meses.push(m);
+  }
+  meses.sort().reverse();
+  var html = '<option value="">Todo el historial</option>';
+  for (var j = 0; j < meses.length; j++) {
+    html += '<option value="' + meses[j] + '">' + etiquetaMes(meses[j]) + '</option>';
+  }
+  sel.innerHTML = html;
+  sel.value = actual;
+}
+
+function renderHistorialRiego() {
+  var cont = document.getElementById('historialRiego');
+  if (!cont) return;
+  if (cuartelActivoRiego == null) { cont.innerHTML = ''; return; }
+  var registros = [];
+  for (var i = 0; i < riegosData.length; i++) {
+    if (String(riegosData[i].cuartel) === String(cuartelActivoRiego)) registros.push(riegosData[i]);
+  }
+
+  poblarFiltroPeriodoRiego(registros);
+  var selPeriodo = document.getElementById('filtroPeriodoRiego');
+  var periodo = selPeriodo ? selPeriodo.value : '';
+  if (periodo) {
+    registros = registros.filter(function(r) { return String(r.fecha || '').slice(0, 7) === periodo; });
+  }
+
+  registros.sort(function(a, b) {
+    var fa = (a.fecha || '') + (a.hora || '');
+    var fb = (b.fecha || '') + (b.hora || '');
+    if (fa !== fb) return fa < fb ? 1 : -1;
+    return String(b.id) < String(a.id) ? -1 : 1;
+  });
+
+  if (registros.length === 0) {
+    cont.innerHTML = '<div class="empty-state"><div class="empty-icon">\uD83D\uDCA7</div><p>' + (periodo ? 'Sin riegos en este per\u00edodo' : 'Este cuartel no tiene riegos registrados') + '</p></div>';
+    return;
+  }
+
+  var activos = [];
+  var anulados = [];
+  for (var k = 0; k < registros.length; k++) {
+    if (registros[k].anulado) anulados.push(registros[k]);
+    else activos.push(registros[k]);
+  }
+
+  var html = '<div class="hint-text" style="text-align:left;padding:10px 2px 8px;">Historial \u00b7 ' + activos.length + ' riego' + (activos.length !== 1 ? 's' : '') + (anulados.length ? ' \u00b7 ' + anulados.length + ' anulado(s)' : '') + '</div>';
+  html += '<div class="historial-grid">';
+  for (var j = 0; j < activos.length; j++) html += riegoCardHtml(activos[j]);
+  for (var m = 0; m < anulados.length; m++) html += riegoCardHtml(anulados[m]);
+  html += '</div>';
+  cont.innerHTML = html;
+}
+
+/* ---------- RIEGO: NUBE ---------- */
+function hashRiego(r) {
+  var ferts = (r.fertilizantes || []).map(function(f) {
+    return [f.producto, f.cantidadCuartel, f.cantidadHa, f.unidadesHa].map(function(x) { return x == null ? '' : String(x); }).join('|');
+  }).join('||');
+  return [r.fecha || '', r.hora || '', String(r.cuartel || ''), r.especie || '', r.variedad || '', r.estadoFenologico || '', String(r.tiempoRiego || ''), String(r.precipitacion || ''), r.fertilizacion ? '1' : '0', ferts, r.responsable || '', r.comentarios || '', r.anulado ? '1' : '0'].join('##');
+}
+
+async function pushRiego(reg) {
+  var body = {
+    user_id: reg.user_id || (sesion ? sesion.userId : null),
+    fecha: reg.fecha,
+    hora: reg.hora || null,
+    cuartel: String(reg.cuartel),
+    especie: reg.especie || '',
+    variedad: reg.variedad || '',
+    estado_fenologico: reg.estadoFenologico || '',
+    tiempo_riego: parseNum(reg.tiempoRiego),
+    precipitacion: parseNum(reg.precipitacion),
+    fertilizacion: !!reg.fertilizacion,
+    fertilizantes: reg.fertilizantes || [],
+    responsable: reg.responsable || '',
+    comentarios: reg.comentarios || '',
+    anulado: !!reg.anulado,
+    modificado_por: sesion ? sesion.userId : null,
+    modificado_en: new Date().toISOString()
+  };
+  if (isNaN(body.tiempo_riego)) body.tiempo_riego = null;
+  if (isNaN(body.precipitacion)) body.precipitacion = null;
+  if (reg.cloud_id) {
+    await sbFetch('riegos?id=eq.' + reg.cloud_id, { method: 'PATCH', body: body });
+    reg.syncHash = hashRiego(reg);
+    reg.conflicto = false;
+  } else {
+    var rows = await sbFetch('riegos', { method: 'POST', body: body, prefer: 'return=representation' });
+    if (rows && rows[0]) {
+      reg.cloud_id = rows[0].id;
+      reg.user_id = rows[0].user_id;
+      reg.syncHash = hashRiego(reg);
+      reg.conflicto = false;
+    }
+  }
+}
+
+function pushRiegoYGuardar(reg) {
+  if (!sesion || !reg) return;
+  if (!navigator.onLine) {
+    encolar({ tipo: 'upsert', tabla: 'riegos', localId: reg.id });
+    mostrarToast('Sin conexi\u00f3n \u2014 el riego se subir\u00e1 autom\u00e1ticamente');
+    return;
+  }
+  pushRiego(reg).then(function() { guardarRiegos(); }).catch(function() {
+    encolar({ tipo: 'upsert', tabla: 'riegos', localId: reg.id });
+    mostrarToast('No se pudo subir \u2014 quedar\u00e1 pendiente');
+  });
+}
+
+async function cargarRiegosNube() {
+  try {
+    var rows = await sbFetch('riegos?select=*&order=fecha.desc,hora.desc');
+    if (!rows) return;
+    var porCloud = {};
+    var cloudIds = {};
+    var i, j;
+    for (i = 0; i < riegosData.length; i++) {
+      if (riegosData[i].cloud_id) porCloud[riegosData[i].cloud_id] = riegosData[i];
+    }
+    for (j = 0; j < rows.length; j++) cloudIds[rows[j].id] = true;
+
+    var resultado = [];
+    var conflictos = [];
+    for (i = 0; i < riegosData.length; i++) {
+      if (!riegosData[i].cloud_id) resultado.push(riegosData[i]);
+    }
+
+    for (j = 0; j < rows.length; j++) {
+      var row = rows[j];
+      var nubeObj = {
+        id: 'nube-' + row.id, cloud_id: row.id, user_id: row.user_id,
+        fecha: row.fecha, hora: row.hora || '', cuartel: row.cuartel,
+        especie: row.especie || '', variedad: row.variedad || '',
+        estadoFenologico: row.estado_fenologico || '',
+        tiempoRiego: row.tiempo_riego != null ? String(row.tiempo_riego) : '',
+        precipitacion: row.precipitacion != null ? String(row.precipitacion) : '',
+        fertilizacion: !!row.fertilizacion, fertilizantes: row.fertilizantes || [],
+        responsable: row.responsable || '', comentarios: row.comentarios || '',
+        anulado: !!row.anulado, creado_en: row.creado_en || null,
+        modificado_por: row.modificado_por || null, modificado_en: row.modificado_en || null
+      };
+      var nubeHash = hashRiego(nubeObj);
+      var local = porCloud[row.id];
+
+      if (!local) {
+        nubeObj.syncHash = nubeHash;
+        resultado.push(nubeObj);
+        continue;
+      }
+      var localHash = hashRiego(local);
+      if (!local.syncHash) {
+        if (localHash === nubeHash) { local.syncHash = nubeHash; resultado.push(local); }
+        else { local.syncHash = ''; resultado.push(local); }
+        continue;
+      }
+      if (localHash === local.syncHash) {
+        var campos = ['fecha','hora','cuartel','especie','variedad','estadoFenologico','tiempoRiego','precipitacion','fertilizacion','fertilizantes','responsable','comentarios','anulado','user_id','creado_en','modificado_por','modificado_en'];
+        for (var k = 0; k < campos.length; k++) local[campos[k]] = nubeObj[campos[k]];
+        local.syncHash = nubeHash;
+        local.conflicto = false;
+        resultado.push(local);
+      } else if (nubeHash === local.syncHash) {
+        resultado.push(local);
+      } else {
+        local.conflicto = true;
+        conflictos.push({ tabla: 'riegos', local: local, nube: nubeObj, nubeHash: nubeHash });
+        resultado.push(local);
+      }
+    }
+
+    for (i = 0; i < riegosData.length; i++) {
+      var r2 = riegosData[i];
+      if (r2.cloud_id && !cloudIds[r2.cloud_id]) {
+        if (r2.syncHash && hashRiego(r2) !== r2.syncHash) {
+          r2.conflicto = true;
+          conflictos.push({ tabla: 'riegos', local: r2, nube: null, nubeHash: null });
+          resultado.push(r2);
+        }
+      }
+    }
+
+    riegosData = resultado;
+    guardarRiegos();
+    if (conflictos.length) mostrarConflictos(conflictos);
+    renderHistorialRiego();
+    renderSelectorRiego();
+  } catch(e) {}
+}
+
+/* ---------- RIEGO: EXPORTAR CSV ---------- */
+window.exportarCSVRiego = function() {
+  var regs = [];
+  for (var i = 0; i < riegosData.length; i++) { if (!riegosData[i].anulado) regs.push(riegosData[i]); }
+  if (!regs.length) { mostrarToast('No hay riegos para exportar'); return; }
+  regs.sort(function(a, b) { return (a.fecha || '') < (b.fecha || '') ? -1 : 1; });
+  var lineas = [['Fecha','Hora','Cuartel','Especie','Variedad','Estado Fenologico','Tiempo Riego (Hr)','Precipitacion (mm/hr)','Fertilizacion','Producto Comercial','Cantidad Cuartel (kg o L)','Cantidad por Ha (kg o L)','Unidades/Ha','Responsable','Comentarios']];
+  for (var r = 0; r < regs.length; r++) {
+    var g = regs[r];
+    var ferts = g.fertilizantes || [];
+    var base = [g.fecha, g.hora || '', g.cuartel, g.especie || '', g.variedad || '', g.estadoFenologico || '', g.tiempoRiego || '', g.precipitacion || '', g.fertilizacion ? 'SI' : 'NO'];
+    if (g.fertilizacion && ferts.length) {
+      for (var j = 0; j < ferts.length; j++) {
+        var f = ferts[j];
+        lineas.push(base.concat([f.producto || '', f.cantidadCuartel || '', f.cantidadHa || '', f.unidadesHa || '', g.responsable || '', g.comentarios || '']));
+      }
+    } else {
+      lineas.push(base.concat(['', '', '', '', g.responsable || '', g.comentarios || '']));
+    }
+  }
+  var csv = lineas.map(function(row) {
+    return row.map(function(c) {
+      var s = String(c == null ? '' : c);
+      if (s.indexOf(',') !== -1 || s.indexOf('"') !== -1 || s.indexOf('\n') !== -1 || s.indexOf(';') !== -1) {
+        s = '"' + s.replace(/"/g, '""') + '"';
+      }
+      return s;
+    }).join(';');
+  }).join('\r\n');
+  var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'riegos_' + fechaHoy() + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  mostrarToast('CSV de riegos exportado');
+};
+
 var menuModulos = [
   { id: 'inicio', titulo: 'Inicio', icono: '\uD83C\uDFE0' },
   { id: 'cuarteles', titulo: 'Cuarteles', icono: '\uD83D\uDDFA\uFE0F', esModulo: true },
-  { id: 'riego', titulo: 'Riego y Fertilizaci\u00f3n', icono: '\uD83D\uDCA7' },
+  { id: 'riego', titulo: 'Riego y Fertilizaci\u00f3n', icono: '\uD83D\uDCA7', esModulo: true },
   { id: 'fitosanitarios', titulo: 'Aplicaciones Fitosanitarias', icono: '\uD83E\uDDEA', esModulo: true },
   { id: 'inventario', titulo: 'Inventario Bodega', icono: '\uD83D\uDCE6' },
   { id: 'nogal', titulo: 'Labores Nogal', icono: '\uD83C\uDF30', hijos: [
@@ -3504,6 +4370,7 @@ document.addEventListener('keydown', function(e) {
 function irAPagina(pageId, titulo, icono, ruta) {
   cerrarDrawer();
   if (pageId === 'fitosanitarios') sincronizarNube();
+  if (pageId === 'riego') { sincronizarNube(); renderSelectorRiego(); }
   if (pageId === 'dashboard') renderDashboard();
   if (pageId === 'descargas') renderDescargas();
   document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
@@ -3528,6 +4395,7 @@ function irAPagina(pageId, titulo, icono, ruta) {
       if (hTitle) hTitle.textContent = titulo || '';
       var subtitulos = {
         fitosanitarios: 'Registro de aplicaciones',
+        riego: 'Riego y fertirriego por cuartel',
         cuarteles: 'Campo Aguirrana \u00b7 Detalle por cuartel',
         mantenedores: 'Usuarios del sistema',
         dashboard: 'Resumen y rendimiento del campo',
@@ -3694,6 +4562,14 @@ renderResponsables();
 renderCuarteles();
 renderSelectorCuarteles();
 renderEditorCuarteles();
+renderSelectorRiego();
+renderFertilizantes();
+document.getElementById('riegoEstado').innerHTML = opcionesHtml(estadosFenologicos);
+document.getElementById('riegoFecha').value = fechaHoy();
+document.getElementById('riegoHora').value = horaAhora();
+document.getElementById('nuevoFertilizante').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') agregarFertilizante();
+});
 construirMenu();
 iniciarBienvenida();
 
@@ -3702,8 +4578,11 @@ document.querySelectorAll('#mantChips .chip').forEach(function(b) {
     document.querySelectorAll('#mantChips .chip').forEach(function(x) { x.classList.remove('active'); });
     b.classList.add('active');
     var t = b.getAttribute('data-mtab');
-    document.getElementById('mtab-usuarios').classList.toggle('is-hidden', t !== 'usuarios');
-    document.getElementById('mtab-cuarteles').classList.toggle('is-hidden', t !== 'cuarteles');
+    var tabs = ['usuarios', 'cuarteles', 'fertilizantes'];
+    for (var q = 0; q < tabs.length; q++) {
+      var el = document.getElementById('mtab-' + tabs[q]);
+      if (el) el.classList.toggle('is-hidden', tabs[q] !== t);
+    }
   });
 });
 
