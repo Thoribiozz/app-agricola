@@ -12,6 +12,10 @@
 <meta property="og:image" content="https://thoribiozz.github.io/app-agricola/img/huerto-invierno.jpg">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Bit&aacute;cora">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <title>Bit&aacute;cora Agr&iacute;cola</title>
 <style>
 /* ============ FUENTES LOCALES ============ */
@@ -4670,6 +4674,10 @@ document.getElementById('loginEmail').addEventListener('keydown', function(e) {
 document.getElementById('loginPass').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') hacerLogin();
 });
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(function() {});
+}
 
 })();
 </script>
