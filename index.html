@@ -1043,6 +1043,10 @@ input[data-autofilled="true"] { background: var(--fern-wash) !important; border-
 .fert-row .btn-del-row { align-self: flex-end; margin-bottom: 10px; }
 .form-group input[readonly] { background: var(--fern-wash); border-style: dashed; }
 
+/* ---------- PRODUCTO MANUAL ---------- */
+.f-manual-wrap { display: flex; gap: 4px; align-items: center; }
+.f-volver-lista { background: var(--fern-wash); border: 1px solid var(--fern-pale); border-radius: var(--r-xs); cursor: pointer; font-size: 0.9rem; padding: 6px 8px; color: var(--fern-dark); flex-shrink: 0; font-family: inherit; }
+
 /* ---------- WELCOME ---------- */
 .welcome-hero {
   position: relative;
@@ -2292,7 +2296,7 @@ var gruposProductos = ["Fungicida", "Insecticida", "Herbicida", "Acaricida", "Ne
 
 var estadosFenologicos = ["Receso Invernal", "Yema Hinchada", "Brotaci\u00f3n", "Floraci\u00f3n", "Cuaja", "Crecimiento de fruto", "Envero", "Precosecha", "Postcosecha", "Ca\u00edda de Hojas"];
 
-var plagasObjetivo = ["Cancer Bacterial", "Hongos de la madera", "Botrytis", "Botrytis/Oidio", "O\u00eddio", "Polillas", "Ara\u00f1itas", "Trips", "Burritos", "Escamas", "Pudrici\u00f3n \u00c1cida", "Chanchito Blanco"];
+var plagasObjetivo = ["Cancer Bacterial", "Hongos de la madera", "Botrytis", "Botrytis/Oidio", "O\u00eddio", "Polillas", "Ara\u00f1itas", "Trips", "Burritos", "Escamas", "Pudrici\u00f3n \u00c1cida", "Chanchito Blanco", "Nutrici\u00f3n Foliar", "Activador Defensas", "Acci\u00f3n Hormonal"];
 
 var opcionesViento = ["Ausencia", "Moderado", "Excesivo"];
 
@@ -2464,7 +2468,54 @@ function opcionesProductosHtml(grupo) {
   for (var i = 0; i < productos.length; i++) {
     html += '<option value="' + escaparAttr(productos[i]) + '">' + escaparHtml(productos[i]) + '</option>';
   }
+  html += '<option value="__OTRO__">&#x270E; Otro (ingreso manual)...</option>';
   return html;
+}
+
+function catalogoTiene(prod) {
+  var keys = Object.keys(productosPorGrupo);
+  for (var k = 0; k < keys.length; k++) {
+    if (productosPorGrupo[keys[k]].indexOf(prod) !== -1) return true;
+  }
+  return false;
+}
+
+function activarModoManualProducto(tr, valorInicial) {
+  var sel = tr.querySelector('.f-producto');
+  var wrap = tr.querySelector('.f-manual-wrap');
+  var ing = tr.querySelector('.f-ingrediente');
+  sel.classList.add('is-hidden');
+  wrap.classList.remove('is-hidden');
+  var inp = wrap.querySelector('.f-producto-manual');
+  if (valorInicial != null) inp.value = valorInicial;
+  ing.readOnly = false;
+  ing.classList.remove('ro-text');
+  ing.placeholder = 'Escribir ingrediente...';
+  inp.focus();
+}
+
+function desactivarModoManualProducto(tr) {
+  var sel = tr.querySelector('.f-producto');
+  var wrap = tr.querySelector('.f-manual-wrap');
+  var ing = tr.querySelector('.f-ingrediente');
+  wrap.classList.add('is-hidden');
+  sel.classList.remove('is-hidden');
+  sel.value = '';
+  wrap.querySelector('.f-producto-manual').value = '';
+  ing.readOnly = true;
+  ing.classList.add('ro-text');
+  ing.placeholder = 'Autom\u00e1tico';
+  ing.value = '';
+  sel.focus();
+}
+
+function valorProducto(tr) {
+  var wrap = tr.querySelector('.f-manual-wrap');
+  if (wrap && !wrap.classList.contains('is-hidden')) {
+    return tr.querySelector('.f-producto-manual').value.trim();
+  }
+  var v = tr.querySelector('.f-producto').value;
+  return v === '__OTRO__' ? '' : String(v).trim();
 }
 
 function poblarDatalistResponsables() {
@@ -2735,7 +2786,8 @@ window.agregarFilaProducto = function(datos) {
     '<td><select class="f-estado">' + opcionesHtml(estadosFenologicos) + '</select></td>' +
     '<td><select class="f-plaga">' + opcionesHtml(plagasObjetivo) + '</select></td>' +
     '<td><select class="f-grupo">' + opcionesHtml(gruposProductos) + '</select></td>' +
-    '<td><select class="f-producto">' + opcionesProductosHtml(datos.grupo || '') + '</select></td>' +
+    '<td><select class="f-producto">' + opcionesProductosHtml(datos.grupo || '') + '</select>' +
+    '<span class="f-manual-wrap is-hidden"><input type="text" class="f-producto-manual" placeholder="Escribir producto..."><button type="button" class="f-volver-lista" title="Volver a la lista">&#x21A9;&#xFE0F;</button></span></td>' +
     '<td><input type="text" class="f-ingrediente ro-text" readonly tabindex="-1" placeholder="Autom\u00e1tico" value="' + escaparAttr(datos.ingredienteActivo || '') + '"></td>' +
     '<td><input type="text" class="f-dosis" placeholder="cc / 100L" value="' + escaparAttr(datos.dosis || '') + '"></td>' +
     '<td><input type="text" class="f-mojamiento" placeholder="Lts/ha" value="' + escaparAttr(datos.mojamiento || '') + '"></td>' +
@@ -2753,7 +2805,15 @@ window.agregarFilaProducto = function(datos) {
   });
 
   tr.querySelector('.f-producto').addEventListener('change', function() {
+    if (this.value === '__OTRO__') {
+      activarModoManualProducto(tr, '');
+      return;
+    }
     tr.querySelector('.f-ingrediente').value = obtenerIngredienteActivo(this.value) || '';
+  });
+
+  tr.querySelector('.f-volver-lista').addEventListener('click', function() {
+    desactivarModoManualProducto(tr);
   });
 
   tr.querySelector('.f-temperatura').addEventListener('input', function() {
@@ -2774,7 +2834,11 @@ window.agregarFilaProducto = function(datos) {
   setSelectValue(tr.querySelector('.f-estado'), datos.estadoFenologico);
   setSelectValue(tr.querySelector('.f-plaga'), datos.plaga);
   setSelectValue(tr.querySelector('.f-grupo'), datos.grupo);
-  setSelectValue(tr.querySelector('.f-producto'), datos.producto);
+  if (datos.producto && !catalogoTiene(datos.producto)) {
+    activarModoManualProducto(tr, datos.producto);
+  } else {
+    setSelectValue(tr.querySelector('.f-producto'), datos.producto);
+  }
   setSelectValue(tr.querySelector('.f-viento'), datos.viento);
 
   var tempInput = tr.querySelector('.f-temperatura');
@@ -2804,7 +2868,7 @@ window.guardarRegistro = function() {
       estadoFenologico: tr.querySelector('.f-estado').value.trim(),
       plaga: tr.querySelector('.f-plaga').value.trim(),
       grupo: tr.querySelector('.f-grupo').value.trim(),
-      producto: tr.querySelector('.f-producto').value.trim(),
+      producto: valorProducto(tr),
       ingredienteActivo: tr.querySelector('.f-ingrediente').value.trim(),
       dosis: tr.querySelector('.f-dosis').value.trim(),
       mojamiento: tr.querySelector('.f-mojamiento').value.trim(),
@@ -3790,7 +3854,7 @@ window.agregarFilaFert = function(datos) {
     '<div class="form-row">' +
       '<div class="form-group"><label>Cantidad cuartel (kg o L)</label><input type="text" class="ff-cantidad" inputmode="decimal" placeholder="Ej: 25" value="' + escaparAttr(datos.cantidadCuartel || '') + '"></div>' +
       '<div class="form-group"><label>Cantidad por Ha (kg o L)</label><input type="text" class="ff-canha" readonly tabindex="-1" placeholder="Auto" value="' + escaparAttr(datos.cantidadHa || '') + '"></div>' +
-      '<div class="form-group"><label>Unidades/Ha</label><input type="text" class="ff-unidades" placeholder="Ej: sacos, bidones" value="' + escaparAttr(datos.unidadesHa || '') + '"></div>' +
+      '<div class="form-group"><label>Unidades/Ha</label><input type="text" class="ff-unidades" value="' + escaparAttr(datos.unidadesHa || '') + '"></div>' +
     '</div>';
   div.querySelector('.btn-del-row').addEventListener('click', function() { div.remove(); });
   div.querySelector('.ff-cantidad').addEventListener('input', function() { recalcFertHa(div); });
