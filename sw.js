@@ -1,9 +1,10 @@
 /* Bitacora Agricola - Service Worker (offline app shell) */
-var CACHE = 'bitacora-v1';
+var CACHE = 'bitacora-v2';
 var ASSETS = [
   './',
   './index.html',
   './manifest.json',
+  './img/portada.jpg',
   './img/huerto-invierno.jpg',
   './img/icon-192.png',
   './img/icon-512.png',

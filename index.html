@@ -9,7 +9,7 @@
 <meta property="og:description" content="Registro de aplicaciones fitosanitarias, cuarteles y labores del campo desde tu smartphone.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://thoribiozz.github.io/app-agricola/">
-<meta property="og:image" content="https://thoribiozz.github.io/app-agricola/img/huerto-invierno.jpg">
+<meta property="og:image" content="https://thoribiozz.github.io/app-agricola/img/portada.jpg">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Bit&aacute;cora">
@@ -1234,8 +1234,8 @@ input[data-autofilled="true"] { background: var(--fern-wash) !important; border-
 
 <header class="app-header">
   <button class="menu-toggle" id="menuToggle" aria-label="Abrir men&uacute;">&#x2630;</button>
-  <h1 id="headerTitle">Gesti&oacute;n Agr&iacute;cola</h1>
-  <div class="subtitle" id="headerSubtitle">Campo &middot; Temporada 2026</div>
+  <h1 id="headerTitle">Bit&aacute;cora Agr&iacute;cola</h1>
+  <div class="subtitle" id="headerSubtitle">La Aguirrana &middot; Temporada 2026</div>
 </header>
 
 <!-- DRAWER LATERAL -->
@@ -1243,7 +1243,7 @@ input[data-autofilled="true"] { background: var(--fern-wash) !important; border-
 <aside class="drawer" id="drawer">
   <div class="drawer-header">
     <div class="d-title">M&oacute;dulos</div>
-    <div class="d-sub">Gesti&oacute;n Agr&iacute;cola</div>
+    <div class="d-sub">Bit&aacute;cora Agr&iacute;cola</div>
   </div>
   <nav class="drawer-menu" id="drawerMenu"></nav>
   <div class="usuario-chip" id="usuarioChip"></div>
@@ -1300,7 +1300,7 @@ input[data-autofilled="true"] { background: var(--fern-wash) !important; border-
       <use href="#wtree" transform="translate(690,551) scale(1.15)"/>
       <rect x="0" y="560" width="800" height="40" fill="#e6e2d8" opacity="0.5"/>
     </svg>
-    <img class="welcome-bg welcome-photo" src="img/huerto-invierno.jpg" alt="Plantaci&oacute;n de nogales en invierno" onerror="this.remove()">
+    <img class="welcome-bg welcome-photo" src="img/portada.jpg" alt="Hileras de nogales del campo La Aguirrana" onerror="this.remove()">
     <div class="welcome-scrim"></div>
 
     <div class="welcome-content">
@@ -4457,8 +4457,8 @@ function irAPagina(pageId, titulo, icono, ruta) {
     var page = document.getElementById('page-' + pageId);
     if (page) page.classList.add('active');
     if (pageId === 'inicio') {
-      if (hTitle) hTitle.textContent = 'Gesti\u00f3n Agr\u00edcola';
-      if (hSub) hSub.textContent = 'Campo \u00b7 Temporada 2026';
+      if (hTitle) hTitle.textContent = 'Bit\u00e1cora Agr\u00edcola';
+      if (hSub) hSub.textContent = 'La Aguirrana \u00b7 Temporada 2026';
     } else {
       if (hTitle) hTitle.textContent = titulo || '';
       var subtitulos = {
