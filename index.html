@@ -1051,6 +1051,16 @@ input[data-autofilled="true"] { background: var(--fern-wash) !important; border-
 .f-manual-wrap { display: flex; gap: 4px; align-items: center; }
 .f-volver-lista { background: var(--fern-wash); border: 1px solid var(--fern-pale); border-radius: var(--r-xs); cursor: pointer; font-size: 0.9rem; padding: 6px 8px; color: var(--fern-dark); flex-shrink: 0; font-family: inherit; }
 
+/* ---------- INVENTARIO / FOTO ---------- */
+.inv-entry { display: flex; gap: 10px; }
+.inv-entry .btn { flex: 1; padding: 14px; font-size: 0.88rem; }
+.foto-preview { width: 100%; max-height: 320px; object-fit: contain; border-radius: var(--r-sm); border: 1px solid var(--border); margin: 10px 0; background: #222; }
+.seg-sm .seg-btn { padding: 8px; font-size: 0.78rem; }
+.foto-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 0.72rem; font-weight: 600; color: var(--fern-dark); background: var(--fern-wash); border: 1px solid var(--fern-pale); border-radius: var(--r-pill); padding: 5px 10px; margin-top: 8px; }
+.foto-chip a { color: var(--fern-dark); }
+.inv-doc-badge { background: var(--marigold-pale); color: var(--marigold-dark); }
+.ocr-estado { font-size: 0.8rem; color: var(--text-secondary); padding: 6px 2px; min-height: 1.4em; }
+
 /* ---------- WELCOME ---------- */
 .welcome-hero {
   position: relative;
@@ -1553,6 +1563,94 @@ input[data-autofilled="true"] { background: var(--fern-wash) !important; border-
 </div>
 <!-- FIN PAGE: RIEGO -->
 
+<!-- PAGE: INVENTARIO BODEGA -->
+<div class="page" id="page-inventario">
+  <main class="main-content">
+
+    <!-- VISTA: LISTA DE INGRESOS -->
+    <div id="viewInvLista">
+      <div class="card">
+        <div class="card-title">&#x1F4E6; Ingreso a Bodega</div>
+        <div class="inv-entry">
+          <button class="btn btn-primary" onclick="iniciarIngresoManual()">&#x270F;&#xFE0F; Ingreso Manual</button>
+          <button class="btn btn-outline" onclick="iniciarIngresoFoto()">&#x1F4F7; Por Fotograf&iacute;a</button>
+        </div>
+      </div>
+      <div class="filter-bar">
+        <select id="filtroPeriodoInv" onchange="renderInventario()"></select>
+      </div>
+      <div id="inventarioList"></div>
+    </div>
+
+    <!-- VISTA: FOTOGRAFIA -->
+    <div id="viewInvFoto" class="is-hidden">
+      <button class="back-bar" onclick="volverInvLista()"><span class="bb-arrow">&#x2039;</span> Volver a inventario</button>
+      <div class="card">
+        <div class="card-title">&#x1F4F7; Factura / Gu&iacute;a de Despacho</div>
+        <input type="file" id="fotoFactura" accept="image/*" style="display:none;">
+        <div class="btn-group">
+          <button class="btn btn-primary" onclick="tomarFoto()">&#x1F4F7; Tomar foto</button>
+          <button class="btn btn-outline" onclick="subirFoto()">&#x1F5BC;&#xFE0F; Subir imagen</button>
+        </div>
+        <img id="fotoPreview" class="foto-preview is-hidden" alt="Vista previa del documento">
+        <div class="ocr-estado" id="ocrEstado"></div>
+        <button class="btn btn-primary" id="btnLeerFoto" onclick="leerFotoIA()" disabled>&#x2728; Leer datos con IA</button>
+      </div>
+    </div>
+
+    <!-- VISTA: FORMULARIO DE INGRESO -->
+    <div id="viewInvForm" class="is-hidden">
+      <button class="back-bar" onclick="volverInvLista()"><span class="bb-arrow">&#x2039;</span> Volver a inventario</button>
+      <div class="cancel-edit-bar" id="cancelEditBarInv">
+        <span>Editando ingreso existente</span>
+        <button class="btn btn-sm btn-ghost" onclick="volverInvLista()">Cancelar edici&oacute;n</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">&#x1F4E6; Datos del Ingreso</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="invFecha">Fecha</label>
+            <input type="date" id="invFecha">
+          </div>
+          <div class="form-group">
+            <label for="invHora">Hora</label>
+            <input type="time" id="invHora">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="invResponsable">Responsable</label>
+            <input type="text" id="invResponsable" list="responsablesDatalist" placeholder="Responsable..." autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label for="invDocumento">Documento (opcional)</label>
+            <input type="text" id="invDocumento" placeholder="Ej: Factura 1234">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">&#x1F9EA; Productos</div>
+        <div id="invFilas"></div>
+        <button type="button" class="btn btn-add" onclick="agregarFilaInv()">+ Agregar producto</button>
+      </div>
+
+      <div class="card">
+        <div class="form-group">
+          <label for="invComentarios">&#x1F4AC; Comentarios</label>
+          <textarea id="invComentarios" placeholder="Notas del ingreso..."></textarea>
+        </div>
+      </div>
+
+      <div id="alertInventario" class="alert"></div>
+      <button class="btn btn-primary" id="btnGuardarIngreso" onclick="guardarIngreso()">&#x1F4BE; Guardar Ingreso</button>
+    </div>
+
+  </main>
+</div>
+<!-- FIN PAGE: INVENTARIO -->
+
 <!-- PAGE: DESCARGAS -->
 <div class="page" id="page-descargas">
   <div class="cuarteles-wrap" id="descargasWrap"></div>
@@ -2033,6 +2131,12 @@ async function procesarOutbox() {
             if (String(riegosData[w].id) === String(op.localId)) { rgr = riegosData[w]; break; }
           }
           if (rgr) await pushRiego(rgr);
+        } else if (op.tabla === 'inventario') {
+          var igr = null;
+          for (var v = 0; v < inventarioData.length; v++) {
+            if (String(inventarioData[v].id) === String(op.localId)) { igr = inventarioData[v]; break; }
+          }
+          if (igr) await pushIngreso(igr);
         } else {
           var reg = null;
           for (var j = 0; j < data.registros.length; j++) {
@@ -2047,6 +2151,7 @@ async function procesarOutbox() {
   }
   guardarDatos(data);
   guardarRiegos();
+  guardarInventario();
   guardarOutbox(fallan);
 }
 
@@ -2182,12 +2287,17 @@ window.resolverConflicto = async function(idx, usarLocal) {
   var c = conflictosPendientes[idx];
   if (!c) return;
   var esRiego = c.tabla === 'riegos';
+  var esInv = c.tabla === 'inventario';
   var data = cargarDatos();
   var reg = null;
   var i;
   if (esRiego) {
     for (i = 0; i < riegosData.length; i++) {
       if (String(riegosData[i].id) === String(c.local.id)) { reg = riegosData[i]; break; }
+    }
+  } else if (esInv) {
+    for (i = 0; i < inventarioData.length; i++) {
+      if (String(inventarioData[i].id) === String(c.local.id)) { reg = inventarioData[i]; break; }
     }
   } else {
     for (i = 0; i < data.registros.length; i++) {
@@ -2198,18 +2308,24 @@ window.resolverConflicto = async function(idx, usarLocal) {
     if (usarLocal) {
       if (!reg) throw new Error('sin registro local');
       if (c.nube === null) { reg.cloud_id = null; reg.syncHash = null; } // recrear en la nube
-      if (esRiego) await pushRiego(reg); else await pushRegistro(reg);
+      if (esRiego) await pushRiego(reg);
+      else if (esInv) await pushIngreso(reg);
+      else await pushRegistro(reg);
     } else {
       if (c.nube === null) {
         if (esRiego) {
           riegosData = riegosData.filter(function(r) { return String(r.id) !== String(c.local.id); });
+        } else if (esInv) {
+          inventarioData = inventarioData.filter(function(r) { return String(r.id) !== String(c.local.id); });
         } else {
           data.registros = data.registros.filter(function(r) { return String(r.id) !== String(c.local.id); });
         }
       } else if (reg) {
         var campos = esRiego
           ? ['fecha','hora','cuartel','especie','variedad','estadoFenologico','tiempoRiego','precipitacion','fertilizacion','fertilizantes','responsable','comentarios','anulado','user_id','creado_en','modificado_por','modificado_en']
-          : ['fecha','hora','cuartel','comentarios','productos','anulado','user_id','creado_en','modificado_por','modificado_en'];
+          : (esInv
+            ? ['fecha','hora','responsable','documento','foto_url','items','comentarios','anulado','user_id','creado_en','modificado_por','modificado_en']
+            : ['fecha','hora','cuartel','comentarios','productos','anulado','user_id','creado_en','modificado_por','modificado_en']);
         for (var k = 0; k < campos.length; k++) {
           if (campos[k] in c.nube) reg[campos[k]] = c.nube[campos[k]];
         }
@@ -2217,13 +2333,14 @@ window.resolverConflicto = async function(idx, usarLocal) {
         reg.conflicto = false;
       }
     }
-    if (esRiego) guardarRiegos(); else guardarDatos(data);
+    if (esRiego) guardarRiegos(); else if (esInv) guardarInventario(); else guardarDatos(data);
     conflictosPendientes.splice(idx, 1);
     renderConflictos();
     renderHistorialCuartel();
     renderSelectorCuarteles();
     renderHistorialRiego();
     renderSelectorRiego();
+    renderInventario();
     mostrarToast('Conflicto resuelto');
   } catch(e) {
     mostrarToast('No se pudo aplicar \u2014 revise conexi\u00f3n');
@@ -2279,10 +2396,12 @@ async function sincronizarNube() {
     await cargarCuartelesNube();
     await cargarFertilizantesNube();
     await cargarRiegosNube();
+    await cargarInventarioNube();
     renderHistorialCuartel();
     renderSelectorCuarteles();
     renderHistorialRiego();
     renderSelectorRiego();
+    renderInventario();
     if (subidos > 0) mostrarToast('Sincronizado: ' + subidos + ' registro(s) respaldados en la nube');
   } catch(e) {
     if (String(e && e.message).indexOf('sesion expirada') !== -1) {
@@ -3507,12 +3626,19 @@ function renderDashboard() {
   totalHoras = Math.round(totalHoras * 10) / 10;
   totalMm = Math.round(totalMm * 10) / 10;
 
+  var nInv = 0, nInvItems = 0;
+  for (var z3 = 0; z3 < inventarioData.length; z3++) {
+    if (inventarioData[z3].anulado) continue;
+    nInv++;
+    nInvItems += (inventarioData[z3].items || []).length;
+  }
+
   var html = '<div class="sec-title">Rendimiento por m\u00f3dulo</div>';
   html += '<div class="mod-grid">';
   var mods = [
     { icono: '\uD83E\uDDEA', titulo: 'Fitosanitarios', valor: totalRegs, sub: 'aplicaciones', extra: fmtCL(totalLitros, 1) + ' L aplicados' },
     { icono: '\uD83D\uDCA7', titulo: 'Riego y Fert.', valor: nRiegos, sub: 'riegos', extra: fmtCL(totalHoras, 1) + ' hrs \u00b7 ' + fmtCL(totalMm, 1) + ' mm' },
-    { icono: '\uD83D\uDCE6', titulo: 'Inventario', valor: null },
+    { icono: '\uD83D\uDCE6', titulo: 'Inventario', valor: nInv, sub: 'ingresos', extra: nInvItems + ' productos' },
     { icono: '\uD83C\uDF30', titulo: 'Lab. Nogal', valor: null },
     { icono: '\uD83C\uDF47', titulo: 'Lab. Uva', valor: null },
     { icono: '\uD83C\uDF52', titulo: 'Lab. Cerezo', valor: null },
@@ -3618,10 +3744,17 @@ function renderDescargas() {
     nR++;
     if (String(riegosData[z2].fecha || '') > ultR) ultR = riegosData[z2].fecha;
   }
+  var nI = 0;
+  var ultI = '';
+  for (var z4 = 0; z4 < inventarioData.length; z4++) {
+    if (inventarioData[z4].anulado) continue;
+    nI++;
+    if (String(inventarioData[z4].fecha || '') > ultI) ultI = inventarioData[z4].fecha;
+  }
   var mods = [
     { icono: '\uD83E\uDDEA', titulo: 'Aplicaciones Fitosanitarias', n: n, ultima: ultima },
     { icono: '\uD83D\uDCA7', titulo: 'Riego y Fertilizaci\u00f3n', n: nR, ultima: ultR, csv: 'riego' },
-    { icono: '\uD83D\uDCE6', titulo: 'Inventario Bodega', n: 0 },
+    { icono: '\uD83D\uDCE6', titulo: 'Inventario Bodega', n: nI, ultima: ultI, csv: 'inv' },
     { icono: '\uD83C\uDF30', titulo: 'Labores Nogal', n: 0 },
     { icono: '\uD83C\uDF47', titulo: 'Labores Uva', n: 0 },
     { icono: '\uD83C\uDF52', titulo: 'Labores Cerezo', n: 0 },
@@ -3645,7 +3778,7 @@ function renderDescargas() {
     html += '<div class="dl-info"><div class="dl-title">' + mo.titulo + '</div>';
     html += '<div class="dl-meta">' + (activo ? (mo.n + ' registro' + (mo.n !== 1 ? 's' : '') + (mo.ultima ? ' \u00b7 \u00faltima: ' + String(mo.ultima).split('-').reverse().join('/') : '')) : 'Sin registros \u2014 m\u00f3dulo en construcci\u00f3n') + '</div></div>';
     if (activo) {
-      html += '<button class="btn btn-outline btn-sm" onclick="' + (mo.csv === 'riego' ? 'exportarCSVRiego()' : 'exportarCSV()') + '">&#x1F4E5; CSV</button>';
+      html += '<button class="btn btn-outline btn-sm" onclick="' + (mo.csv === 'riego' ? 'exportarCSVRiego()' : (mo.csv === 'inv' ? 'exportarCSVInventario()' : 'exportarCSV()')) + '">&#x1F4E5; CSV</button>';
     } else {
       html += '<button class="btn btn-outline btn-sm" disabled>CSV</button>';
     }
@@ -4339,12 +4472,640 @@ window.exportarCSVRiego = function() {
   mostrarToast('CSV de riegos exportado');
 };
 
+/* ==================== INVENTARIO BODEGA ==================== */
+var INV_KEY = 'inventario_cache';
+var inventarioData = [];
+var editandoIngresoId = null;
+var fotoPendiente = null;
+var unidadesInv = ['Kg', 'L', 'Unidades', 'Sacos', 'Bidones', 'Cajas'];
+
+(function cargarCacheInventario() {
+  try {
+    var raw = localStorage.getItem(INV_KEY);
+    if (raw) { var a = JSON.parse(raw); if (Array.isArray(a)) inventarioData = a; }
+  } catch(e) {}
+})();
+
+function guardarInventario() {
+  try { localStorage.setItem(INV_KEY, JSON.stringify(inventarioData)); return true; }
+  catch(e) { mostrarToast('Error al guardar inventario'); return false; }
+}
+
+function mostrarVistaInv(vista) {
+  document.getElementById('viewInvLista').classList.toggle('is-hidden', vista !== 'lista');
+  document.getElementById('viewInvFoto').classList.toggle('is-hidden', vista !== 'foto');
+  document.getElementById('viewInvForm').classList.toggle('is-hidden', vista !== 'form');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function cancelarEdicionIngreso() {
+  editandoIngresoId = null;
+  document.getElementById('cancelEditBarInv').classList.remove('visible');
+  document.getElementById('btnGuardarIngreso').textContent = '\uD83D\uDCBE Guardar Ingreso';
+  document.getElementById('alertInventario').classList.remove('visible');
+}
+
+window.volverInvLista = function() {
+  cancelarEdicionIngreso();
+  renderInventario();
+  mostrarVistaInv('lista');
+};
+
+/* ---------- FILAS DE PRODUCTO ---------- */
+window.agregarFilaInv = function(datos) {
+  datos = datos || {};
+  var cont = document.getElementById('invFilas');
+  var div = document.createElement('div');
+  div.className = 'fert-row';
+  div.innerHTML =
+    '<div class="form-row" style="align-items:flex-end;">' +
+      '<div class="form-group"><label>Producto comercial</label><input type="text" class="fi-producto" list="invProductosDatalist" placeholder="Ej: Sulfato Potasio" autocomplete="off" value="' + escaparAttr(datos.producto || '') + '"></div>' +
+      '<button type="button" class="btn-del-row" title="Quitar producto">&times;</button>' +
+    '</div>' +
+    '<div class="form-row">' +
+      '<div class="form-group"><label>Cantidad</label><input type="text" class="fi-cantidad" inputmode="decimal" placeholder="Ej: 25" value="' + escaparAttr(datos.cantidad || '') + '"></div>' +
+      '<div class="form-group"><label>Unidad</label><select class="fi-unidad">' + opcionesHtml(unidadesInv) + '</select></div>' +
+    '</div>' +
+    '<div class="form-row">' +
+      '<div class="form-group"><label>Precio</label><input type="text" class="fi-precio" inputmode="decimal" placeholder="Ej: 15990" value="' + escaparAttr(datos.precio || '') + '"></div>' +
+      '<div class="form-group"><label>Moneda</label><div class="seg-toggle seg-sm">' +
+        '<button type="button" class="seg-btn fi-moneda' + (datos.moneda === 'USD' ? '' : ' active') + '" data-m="CLP">$ Pesos</button>' +
+        '<button type="button" class="seg-btn fi-moneda' + (datos.moneda === 'USD' ? ' active' : '') + '" data-m="USD">UDS</button>' +
+      '</div></div>' +
+    '</div>';
+  div.querySelector('.btn-del-row').addEventListener('click', function() { div.remove(); });
+  div.querySelectorAll('.fi-moneda').forEach(function(b) {
+    b.addEventListener('click', function() {
+      div.querySelectorAll('.fi-moneda').forEach(function(x) { x.classList.remove('active'); });
+      b.classList.add('active');
+    });
+  });
+  setSelectValue(div.querySelector('.fi-unidad'), datos.unidad || 'Unidades');
+  cont.appendChild(div);
+};
+
+function limpiarFormIngreso() {
+  document.getElementById('invFecha').value = fechaHoy();
+  document.getElementById('invHora').value = horaAhora();
+  document.getElementById('invResponsable').value = '';
+  document.getElementById('invDocumento').value = '';
+  document.getElementById('invComentarios').value = '';
+  document.getElementById('invFilas').innerHTML = '';
+  document.getElementById('alertInventario').classList.remove('visible');
+}
+
+window.iniciarIngresoManual = function() {
+  cancelarEdicionIngreso();
+  limpiarFormIngreso();
+  if (document.getElementById('invFilas').children.length === 0) agregarFilaInv();
+  mostrarVistaInv('form');
+};
+
+window.iniciarIngresoFoto = function() {
+  fotoPendiente = null;
+  document.getElementById('fotoPreview').classList.add('is-hidden');
+  document.getElementById('btnLeerFoto').disabled = true;
+  document.getElementById('ocrEstado').textContent = '';
+  mostrarVistaInv('foto');
+};
+
+/* ---------- FOTO: captura, compresion y lectura IA ---------- */
+window.tomarFoto = function() {
+  var inp = document.getElementById('fotoFactura');
+  inp.setAttribute('capture', 'environment');
+  inp.click();
+};
+window.subirFoto = function() {
+  var inp = document.getElementById('fotoFactura');
+  inp.removeAttribute('capture');
+  inp.click();
+};
+
+function comprimirImagen(file) {
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var img = new Image();
+    img.onload = function() {
+      var max = 1400;
+      var sc = Math.min(1, max / Math.max(img.width, img.height));
+      var canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(img.width * sc));
+      canvas.height = Math.max(1, Math.round(img.height * sc));
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(function(blob) {
+        var rd = new FileReader();
+        rd.onload = function(ev) {
+          fotoPendiente = { blob: blob, dataUrl: ev.target.result };
+          var prev = document.getElementById('fotoPreview');
+          prev.src = ev.target.result;
+          prev.classList.remove('is-hidden');
+          document.getElementById('btnLeerFoto').disabled = false;
+          document.getElementById('ocrEstado').textContent = 'Imagen lista (' + Math.round(blob.size / 1024) + ' KB). Pulsa "Leer datos con IA".';
+        };
+        rd.readAsDataURL(blob);
+      }, 'image/jpeg', 0.82);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+window.leerFotoIA = async function() {
+  if (!fotoPendiente) return;
+  var estado = document.getElementById('ocrEstado');
+  if (!sesion) { estado.textContent = 'Debes iniciar sesi\u00f3n.'; return; }
+  if (!navigator.onLine) { estado.textContent = 'Sin conexi\u00f3n \u2014 la lectura con IA requiere internet.'; return; }
+  var btn = document.getElementById('btnLeerFoto');
+  btn.disabled = true;
+  btn.textContent = 'Leyendo documento...';
+  estado.textContent = '\u2728 Analizando con IA (10-20 segundos)...';
+  try {
+    var b64 = fotoPendiente.dataUrl.split(',')[1];
+    var r = await fetch(SUPABASE_URL + '/functions/v1/leer-factura', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + sesion.accessToken,
+        'apikey': SUPABASE_ANON
+      },
+      body: JSON.stringify({ image: b64, mediaType: 'image/jpeg' })
+    });
+    var d = await r.json();
+    if (!r.ok || d.error) throw new Error(d.error || ('HTTP ' + r.status));
+
+    limpiarFormIngreso();
+    document.getElementById('invFilas').innerHTML = '';
+    if (d.fecha) document.getElementById('invFecha').value = d.fecha;
+    if (d.documento) document.getElementById('invDocumento').value = d.documento;
+    if (d.items && d.items.length) {
+      for (var i = 0; i < d.items.length; i++) {
+        var it = d.items[i];
+        agregarFilaInv({ producto: it.producto, cantidad: it.cantidad, unidad: it.unidad, precio: it.precio, moneda: it.moneda === 'USD' ? 'USD' : 'CLP' });
+      }
+    } else {
+      agregarFilaInv();
+    }
+    estado.textContent = '';
+    mostrarVistaInv('form');
+    mostrarToast('Datos le\u00eddos \u2014 revise antes de guardar');
+  } catch(e) {
+    estado.textContent = 'No se pudo leer (' + (e && e.message ? e.message : 'error') + '). Puedes usar el ingreso manual.';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '\u2728 Leer datos con IA';
+  }
+};
+
+async function subirFotoStorage() {
+  if (!fotoPendiente || !sesion) return null;
+  var path = (sesion.userId || 'anon') + '/' + Date.now() + '.jpg';
+  var r = await fetch(SUPABASE_URL + '/storage/v1/object/facturas/' + path, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_ANON,
+      'Authorization': 'Bearer ' + sesion.accessToken,
+      'Content-Type': 'image/jpeg',
+      'x-upsert': 'true'
+    },
+    body: fotoPendiente.blob
+  });
+  if (!r.ok) throw new Error('foto no subida');
+  return 'facturas/' + path;
+}
+
+window.verFoto = async function(fotoUrl) {
+  if (!sesion) return;
+  try {
+    var r = await fetch(SUPABASE_URL + '/storage/v1/object/sign/' + fotoUrl, {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + sesion.accessToken, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ expiresIn: 300 })
+    });
+    var d = await r.json();
+    if (r.ok && d.signedURL) {
+      window.open(SUPABASE_URL + '/storage/v1' + d.signedURL, '_blank');
+    } else {
+      mostrarToast('No se pudo abrir la foto');
+    }
+  } catch(e) { mostrarToast('No se pudo abrir la foto'); }
+};
+
+/* ---------- INVENTARIO: GUARDAR / EDITAR / ANULAR ---------- */
+window.guardarIngreso = function() {
+  var fecha = document.getElementById('invFecha').value;
+  var hora = document.getElementById('invHora').value;
+  var responsable = document.getElementById('invResponsable').value.trim();
+  var documento = document.getElementById('invDocumento').value.trim();
+  var comentarios = document.getElementById('invComentarios').value.trim();
+
+  if (!fecha) { mostrarAlerta('alertInventario', 'error', 'Seleccione una fecha.'); return; }
+
+  var items = [];
+  var filas = document.getElementById('invFilas').children;
+  for (var i = 0; i < filas.length; i++) {
+    var moneda = 'CLP';
+    var btns = filas[i].querySelectorAll('.fi-moneda');
+    for (var b = 0; b < btns.length; b++) { if (btns[b].classList.contains('active')) moneda = btns[b].getAttribute('data-m'); }
+    var it = {
+      producto: filas[i].querySelector('.fi-producto').value.trim(),
+      cantidad: filas[i].querySelector('.fi-cantidad').value.trim(),
+      unidad: filas[i].querySelector('.fi-unidad').value.trim(),
+      precio: filas[i].querySelector('.fi-precio').value.trim(),
+      moneda: moneda
+    };
+    if (!it.producto && !it.cantidad && !it.precio) continue;
+    items.push(it);
+  }
+  if (items.length === 0) { mostrarAlerta('alertInventario', 'error', 'Agregue al menos un producto con datos.'); return; }
+
+  if (editandoIngresoId !== null) {
+    var reg = null;
+    for (var k = 0; k < inventarioData.length; k++) {
+      if (String(inventarioData[k].id) === String(editandoIngresoId)) { reg = inventarioData[k]; break; }
+    }
+    if (reg) {
+      reg.fecha = fecha; reg.hora = hora; reg.responsable = responsable;
+      reg.documento = documento; reg.comentarios = comentarios; reg.items = items;
+      if (!reg.user_id) reg.user_id = sesion ? sesion.userId : null;
+      reg.modificado_por = sesion ? sesion.userId : null;
+      reg.modificado_en = new Date().toISOString();
+      guardarInventario();
+      mostrarToast('Ingreso actualizado');
+      cancelarEdicionIngreso();
+      volverInvLista();
+      pushIngresoYGuardar(reg);
+    }
+  } else {
+    var nuevo = {
+      id: generarId(),
+      fecha: fecha, hora: hora, responsable: responsable,
+      documento: documento, comentarios: comentarios, items: items,
+      foto_url: '',
+      user_id: sesion ? sesion.userId : null,
+      anulado: false
+    };
+    inventarioData.push(nuevo);
+    guardarInventario();
+    mostrarToast('Ingreso guardado');
+    limpiarFormIngreso();
+    volverInvLista();
+    pushIngresoYGuardar(nuevo);
+  }
+};
+
+window.editarIngreso = function(id) {
+  var reg = null;
+  for (var i = 0; i < inventarioData.length; i++) {
+    if (String(inventarioData[i].id) === String(id)) { reg = inventarioData[i]; break; }
+  }
+  if (!reg) return;
+  editandoIngresoId = reg.id;
+  limpiarFormIngreso();
+  document.getElementById('invFecha').value = reg.fecha;
+  document.getElementById('invHora').value = reg.hora || horaAhora();
+  document.getElementById('invResponsable').value = reg.responsable || '';
+  document.getElementById('invDocumento').value = reg.documento || '';
+  document.getElementById('invComentarios').value = reg.comentarios || '';
+  var items = reg.items || [];
+  for (var j = 0; j < items.length; j++) agregarFilaInv(items[j]);
+  if (!items.length) agregarFilaInv();
+  document.getElementById('btnGuardarIngreso').textContent = '\u2705 Actualizar Ingreso';
+  document.getElementById('cancelEditBarInv').classList.add('visible');
+  mostrarVistaInv('form');
+};
+
+window.duplicarIngreso = function(id) {
+  var reg = null;
+  for (var i = 0; i < inventarioData.length; i++) {
+    if (String(inventarioData[i].id) === String(id)) { reg = inventarioData[i]; break; }
+  }
+  if (!reg) return;
+  var copia = JSON.parse(JSON.stringify(reg));
+  editandoIngresoId = null;
+  limpiarFormIngreso();
+  document.getElementById('invResponsable').value = copia.responsable || '';
+  document.getElementById('invDocumento').value = copia.documento || '';
+  document.getElementById('invComentarios').value = copia.comentarios || '';
+  document.getElementById('invFilas').innerHTML = '';
+  var items = copia.items || [];
+  for (var j = 0; j < items.length; j++) agregarFilaInv(items[j]);
+  if (!items.length) agregarFilaInv();
+  mostrarVistaInv('form');
+  mostrarToast('Ingreso duplicado \u2014 revise y guarde');
+};
+
+window.anularIngreso = function(id) {
+  abrirModal('Anular Ingreso', '\u00bfAnular este ingreso? Quedar\u00e1 marcado como ANULADO y se conservar\u00e1 en la base (no se elimina f\u00edsicamente).', function() {
+    var reg = null;
+    for (var i = 0; i < inventarioData.length; i++) {
+      if (String(inventarioData[i].id) === String(id)) { reg = inventarioData[i]; break; }
+    }
+    if (!reg) return;
+    reg.anulado = true;
+    reg.modificado_por = sesion ? sesion.userId : null;
+    reg.modificado_en = new Date().toISOString();
+    guardarInventario();
+    pushIngresoYGuardar(reg);
+    mostrarToast('Ingreso anulado');
+    if (String(editandoIngresoId) === String(id)) cancelarEdicionIngreso();
+    renderInventario();
+  }, 'Anular');
+};
+
+/* ---------- INVENTARIO: HISTORIAL ---------- */
+function ingresoCardHtml(r) {
+  var fechaF = String(r.fecha || '').split('-').reverse().join('/');
+  var items = r.items || [];
+  var rid = escaparAttr(r.id);
+
+  var html = '<div class="record-card' + (r.anulado ? ' anulado' : '') + '">';
+  html += '<div class="record-header" onclick="toggleRecordBody(this)">';
+  html += '<span class="rec-icon">\uD83D\uDCE6</span>';
+  html += '<div class="record-info">';
+  html += '<div class="record-date">\uD83D\uDCC5 ' + fechaF + (r.hora ? ' <span class="rec-hora">\u00b7 \uD83D\uDD52 ' + escaparHtml(r.hora) + '</span>' : '') + '</div>';
+  html += '<div class="record-meta">' + escaparHtml(r.documento || 'Ingreso manual') + ' &middot; ' + items.length + ' producto' + (items.length !== 1 ? 's' : '') + '</div>';
+  if (r.responsable) html += '<div class="record-meta">\uD83D\uDC64 ' + escaparHtml(r.responsable) + '</div>';
+  html += '</div>';
+  if (r.anulado) {
+    html += '<span class="record-badge badge-anulado">ANULADO</span>';
+  } else {
+    html += '<span class="record-badge">' + items.length + '</span>';
+  }
+  html += '</div>';
+
+  html += '<div class="record-body">';
+  for (var j = 0; j < items.length; j++) {
+    var it = items[j];
+    html += '<div class="prod-card">';
+    html += '<div class="pc-head"><span class="pc-name">' + escaparHtml(it.producto || '-') + '</span></div>';
+    html += '<div class="pc-grid">';
+    html += pcDato('Cantidad', it.cantidad);
+    html += pcDato('Unidad', it.unidad);
+    html += pcDato('Precio', it.precio);
+    html += pcDato('Moneda', it.moneda === 'USD' ? 'UDS' : '$ (CLP)');
+    html += '</div></div>';
+  }
+  if (r.comentarios) {
+    html += '<div class="comment-row"><strong>Comentarios:</strong> ' + escaparHtml(r.comentarios) + '</div>';
+  }
+  if (r.foto_url) {
+    html += '<span class="foto-chip"><a href="#" onclick="event.preventDefault();event.stopPropagation();verFoto(\'' + escaparAttr(r.foto_url) + '\')">\uD83D\uDCF7 Ver documento</a></span>';
+  }
+  var ingNombre = nombreUsuario(r.user_id);
+  if (ingNombre || r.creado_en) {
+    html += '<div class="comment-row" style="font-style:normal;">\uD83D\uDCDD Ingresado por <b>' + escaparHtml(ingNombre || 'usuario') + '</b>' + (r.creado_en ? ' \u00b7 ' + escaparHtml(String(r.creado_en).slice(0, 10).split('-').reverse().join('/')) : '') + '</div>';
+  }
+  if (!r.anulado) {
+    var puedeEditar = true;
+    var puedeAnular = true;
+    if (sesion && !esAdmin()) {
+      puedeAnular = false;
+      puedeEditar = !r.user_id || String(r.user_id) === String(sesion.userId);
+    }
+    html += '<div class="record-actions">';
+    if (puedeEditar) html += '<button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); editarIngreso(\'' + rid + '\')">&#x270F; Editar</button>';
+    html += '<button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); duplicarIngreso(\'' + rid + '\')">&#x2398; Duplicar</button>';
+    if (puedeAnular) html += '<button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); anularIngreso(\'' + rid + '\')">&#x26D4; Anular</button>';
+    html += '</div>';
+  }
+  html += '</div></div>';
+  return html;
+}
+
+function poblarFiltroPeriodoInv(registros) {
+  var sel = document.getElementById('filtroPeriodoInv');
+  if (!sel) return;
+  var actual = sel.value;
+  var meses = [];
+  for (var i = 0; i < registros.length; i++) {
+    var m = String(registros[i].fecha || '').slice(0, 7);
+    if (m.length === 7 && meses.indexOf(m) === -1) meses.push(m);
+  }
+  meses.sort().reverse();
+  var html = '<option value="">Todo el historial</option>';
+  for (var j = 0; j < meses.length; j++) {
+    html += '<option value="' + meses[j] + '">' + etiquetaMes(meses[j]) + '</option>';
+  }
+  sel.innerHTML = html;
+  sel.value = actual;
+}
+
+function renderInventario() {
+  var cont = document.getElementById('inventarioList');
+  if (!cont) return;
+  var registros = inventarioData.slice();
+  poblarDatalistInvProductos();
+
+  poblarFiltroPeriodoInv(registros);
+  var selPeriodo = document.getElementById('filtroPeriodoInv');
+  var periodo = selPeriodo ? selPeriodo.value : '';
+  if (periodo) {
+    registros = registros.filter(function(r) { return String(r.fecha || '').slice(0, 7) === periodo; });
+  }
+
+  registros.sort(function(a, b) {
+    var fa = (a.fecha || '') + (a.hora || '');
+    var fb = (b.fecha || '') + (b.hora || '');
+    if (fa !== fb) return fa < fb ? 1 : -1;
+    return String(b.id) < String(a.id) ? -1 : 1;
+  });
+
+  if (registros.length === 0) {
+    cont.innerHTML = '<div class="empty-state"><div class="empty-icon">\uD83D\uDCE6</div><p>' + (periodo ? 'Sin ingresos en este per\u00edodo' : 'No hay ingresos registrados') + '</p></div>';
+    return;
+  }
+
+  var activos = [];
+  var anulados = [];
+  for (var k = 0; k < registros.length; k++) {
+    if (registros[k].anulado) anulados.push(registros[k]);
+    else activos.push(registros[k]);
+  }
+
+  var html = '<div class="hint-text" style="text-align:left;padding:4px 2px 8px;">Historial \u00b7 ' + activos.length + ' ingreso' + (activos.length !== 1 ? 's' : '') + (anulados.length ? ' \u00b7 ' + anulados.length + ' anulado(s)' : '') + '</div>';
+  html += '<div class="historial-grid">';
+  for (var j = 0; j < activos.length; j++) html += ingresoCardHtml(activos[j]);
+  for (var m = 0; m < anulados.length; m++) html += ingresoCardHtml(anulados[m]);
+  html += '</div>';
+  cont.innerHTML = html;
+}
+
+/* ---------- INVENTARIO: NUBE ---------- */
+function hashInventario(r) {
+  var items = (r.items || []).map(function(it) {
+    return [it.producto, it.cantidad, it.unidad, it.precio, it.moneda].map(function(x) { return x == null ? '' : String(x); }).join('|');
+  }).join('||');
+  return [r.fecha || '', r.hora || '', r.documento || '', items, r.responsable || '', r.comentarios || '', r.anulado ? '1' : '0', r.foto_url || ''].join('##');
+}
+
+async function pushIngreso(reg) {
+  var body = {
+    user_id: reg.user_id || (sesion ? sesion.userId : null),
+    fecha: reg.fecha,
+    hora: reg.hora || null,
+    responsable: reg.responsable || '',
+    documento: reg.documento || '',
+    foto_url: reg.foto_url || '',
+    items: reg.items || [],
+    comentarios: reg.comentarios || '',
+    anulado: !!reg.anulado,
+    modificado_por: sesion ? sesion.userId : null,
+    modificado_en: new Date().toISOString()
+  };
+  if (reg.cloud_id) {
+    await sbFetch('inventario_ingresos?id=eq.' + reg.cloud_id, { method: 'PATCH', body: body });
+    reg.syncHash = hashInventario(reg);
+    reg.conflicto = false;
+  } else {
+    var rows = await sbFetch('inventario_ingresos', { method: 'POST', body: body, prefer: 'return=representation' });
+    if (rows && rows[0]) {
+      reg.cloud_id = rows[0].id;
+      reg.user_id = rows[0].user_id;
+      reg.syncHash = hashInventario(reg);
+      reg.conflicto = false;
+    }
+  }
+}
+
+function pushIngresoYGuardar(reg) {
+  if (!sesion || !reg) return;
+  if (!navigator.onLine) {
+    encolar({ tipo: 'upsert', tabla: 'inventario', localId: reg.id });
+    mostrarToast('Sin conexi\u00f3n \u2014 el ingreso se subir\u00e1 autom\u00e1ticamente');
+    return;
+  }
+  (async function() {
+    try {
+      if (fotoPendiente && !reg.foto_url) {
+        reg.foto_url = await subirFotoStorage();
+        fotoPendiente = null;
+      }
+      await pushIngreso(reg);
+      guardarInventario();
+    } catch(e) {
+      encolar({ tipo: 'upsert', tabla: 'inventario', localId: reg.id });
+      mostrarToast('No se pudo subir \u2014 quedar\u00e1 pendiente');
+    }
+  })();
+}
+
+async function cargarInventarioNube() {
+  try {
+    var rows = await sbFetch('inventario_ingresos?select=*&order=fecha.desc,hora.desc');
+    if (!rows) return;
+    var porCloud = {};
+    var cloudIds = {};
+    var i, j;
+    for (i = 0; i < inventarioData.length; i++) {
+      if (inventarioData[i].cloud_id) porCloud[inventarioData[i].cloud_id] = inventarioData[i];
+    }
+    for (j = 0; j < rows.length; j++) cloudIds[rows[j].id] = true;
+
+    var resultado = [];
+    var conflictos = [];
+    for (i = 0; i < inventarioData.length; i++) {
+      if (!inventarioData[i].cloud_id) resultado.push(inventarioData[i]);
+    }
+
+    for (j = 0; j < rows.length; j++) {
+      var row = rows[j];
+      var nubeObj = {
+        id: 'nube-' + row.id, cloud_id: row.id, user_id: row.user_id,
+        fecha: row.fecha, hora: row.hora || '', responsable: row.responsable || '',
+        documento: row.documento || '', foto_url: row.foto_url || '',
+        items: row.items || [], comentarios: row.comentarios || '',
+        anulado: !!row.anulado, creado_en: row.creado_en || null,
+        modificado_por: row.modificado_por || null, modificado_en: row.modificado_en || null
+      };
+      var nubeHash = hashInventario(nubeObj);
+      var local = porCloud[row.id];
+
+      if (!local) {
+        nubeObj.syncHash = nubeHash;
+        resultado.push(nubeObj);
+        continue;
+      }
+      var localHash = hashInventario(local);
+      if (!local.syncHash) {
+        if (localHash === nubeHash) { local.syncHash = nubeHash; resultado.push(local); }
+        else { local.syncHash = ''; resultado.push(local); }
+        continue;
+      }
+      if (localHash === local.syncHash) {
+        var campos = ['fecha','hora','responsable','documento','foto_url','items','comentarios','anulado','user_id','creado_en','modificado_por','modificado_en'];
+        for (var k = 0; k < campos.length; k++) local[campos[k]] = nubeObj[campos[k]];
+        local.syncHash = nubeHash;
+        local.conflicto = false;
+        resultado.push(local);
+      } else if (nubeHash === local.syncHash) {
+        resultado.push(local);
+      } else {
+        local.conflicto = true;
+        conflictos.push({ tabla: 'inventario', local: local, nube: nubeObj, nubeHash: nubeHash });
+        resultado.push(local);
+      }
+    }
+
+    for (i = 0; i < inventarioData.length; i++) {
+      var r2 = inventarioData[i];
+      if (r2.cloud_id && !cloudIds[r2.cloud_id]) {
+        if (r2.syncHash && hashInventario(r2) !== r2.syncHash) {
+          r2.conflicto = true;
+          conflictos.push({ tabla: 'inventario', local: r2, nube: null, nubeHash: null });
+          resultado.push(r2);
+        }
+      }
+    }
+
+    inventarioData = resultado;
+    guardarInventario();
+    if (conflictos.length) mostrarConflictos(conflictos);
+    renderInventario();
+  } catch(e) {}
+}
+
+/* ---------- INVENTARIO: EXPORTAR CSV ---------- */
+window.exportarCSVInventario = function() {
+  var regs = [];
+  for (var i = 0; i < inventarioData.length; i++) { if (!inventarioData[i].anulado) regs.push(inventarioData[i]); }
+  if (!regs.length) { mostrarToast('No hay ingresos para exportar'); return; }
+  regs.sort(function(a, b) { return (a.fecha || '') < (b.fecha || '') ? -1 : 1; });
+  var lineas = [['Fecha','Hora','Documento','Producto Comercial','Cantidad','Unidad','Precio','Moneda','Responsable','Comentarios']];
+  for (var r = 0; r < regs.length; r++) {
+    var g = regs[r];
+    var items = g.items || [];
+    for (var j = 0; j < items.length; j++) {
+      var it = items[j];
+      lineas.push([g.fecha, g.hora || '', g.documento || '', it.producto || '', it.cantidad || '', it.unidad || '', it.precio || '', it.moneda || 'CLP', g.responsable || '', g.comentarios || '']);
+    }
+  }
+  var csv = lineas.map(function(row) {
+    return row.map(function(c) {
+      var s = String(c == null ? '' : c);
+      if (s.indexOf(',') !== -1 || s.indexOf('"') !== -1 || s.indexOf('\n') !== -1 || s.indexOf(';') !== -1) {
+        s = '"' + s.replace(/"/g, '""') + '"';
+      }
+      return s;
+    }).join(';');
+  }).join('\r\n');
+  var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'inventario_' + fechaHoy() + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  mostrarToast('CSV de inventario exportado');
+};
+
 var menuModulos = [
   { id: 'inicio', titulo: 'Inicio', icono: '\uD83C\uDFE0' },
   { id: 'cuarteles', titulo: 'Cuarteles', icono: '\uD83D\uDDFA\uFE0F', esModulo: true },
   { id: 'riego', titulo: 'Riego y Fertilizaci\u00f3n', icono: '\uD83D\uDCA7', esModulo: true },
   { id: 'fitosanitarios', titulo: 'Aplicaciones Fitosanitarias', icono: '\uD83E\uDDEA', esModulo: true },
-  { id: 'inventario', titulo: 'Inventario Bodega', icono: '\uD83D\uDCE6' },
+  { id: 'inventario', titulo: 'Inventario Bodega', icono: '\uD83D\uDCE6' , esModulo: true },
   { id: 'nogal', titulo: 'Labores Nogal', icono: '\uD83C\uDF30', hijos: [
     { id: 'nogal-poda', titulo: 'Poda' },
     { id: 'nogal-cosecha', titulo: 'Cosecha' }
@@ -4439,6 +5200,7 @@ function irAPagina(pageId, titulo, icono, ruta) {
   cerrarDrawer();
   if (pageId === 'fitosanitarios') sincronizarNube();
   if (pageId === 'riego') { sincronizarNube(); renderSelectorRiego(); }
+  if (pageId === 'inventario') { sincronizarNube(); renderInventario(); }
   if (pageId === 'dashboard') renderDashboard();
   if (pageId === 'descargas') renderDescargas();
   document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
@@ -4464,6 +5226,7 @@ function irAPagina(pageId, titulo, icono, ruta) {
       var subtitulos = {
         fitosanitarios: 'Registro de aplicaciones',
         riego: 'Riego y fertirriego por cuartel',
+        inventario: 'Bodega \u00b7 ingresos y documentos',
         cuarteles: 'Campo Aguirrana \u00b7 Detalle por cuartel',
         mantenedores: 'Usuarios del sistema',
         dashboard: 'Resumen y rendimiento del campo',
@@ -4632,6 +5395,28 @@ renderSelectorCuarteles();
 renderEditorCuarteles();
 renderSelectorRiego();
 renderFertilizantes();
+var dlInv = document.createElement('datalist');
+dlInv.id = 'invProductosDatalist';
+document.body.appendChild(dlInv);
+document.getElementById('invFecha').value = fechaHoy();
+document.getElementById('invHora').value = horaAhora();
+document.getElementById('fotoFactura').addEventListener('change', function(e) {
+  if (e.target.files && e.target.files[0]) comprimirImagen(e.target.files[0]);
+  e.target.value = '';
+});
+renderInventario();
+
+function poblarDatalistInvProductos() {
+  var nombres = fertilizantesData.slice();
+  for (var i = 0; i < inventarioData.length; i++) {
+    var items = inventarioData[i].items || [];
+    for (var j = 0; j < items.length; j++) {
+      if (items[j].producto && nombres.indexOf(items[j].producto) === -1) nombres.push(items[j].producto);
+    }
+  }
+  nombres.sort();
+  dlInv.innerHTML = nombres.map(function(n) { return '<option value="' + escaparAttr(n) + '"></option>'; }).join('');
+}
 document.getElementById('riegoEstado').innerHTML = opcionesHtml(estadosFenologicos);
 document.getElementById('riegoFecha').value = fechaHoy();
 document.getElementById('riegoHora').value = horaAhora();
